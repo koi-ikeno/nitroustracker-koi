@@ -1048,9 +1048,10 @@ void stop(void)
 
 void stopPlay(void)
 {
-	stop();
-
 	state->pause = false;
+	state->row = 0;
+
+	stop();
 
 	buttonpause->hide();
 	buttonplay->show();
