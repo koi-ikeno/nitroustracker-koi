@@ -52,6 +52,35 @@ void Piano::penDown(u8 px, u8 py)
 	curr_note = note;
 }
 
+void Piano::penMove(u8 px, u8 py)
+{
+	// Look up the note in the hit-array
+	u8 kbx, kby;
+	kbx = (px - x)/8;
+	kby = (py - y)/8;
+	
+	u8 note = piano_hit[kby][kbx];
+	
+	// Only when it moves to another note
+	if (note != curr_note) {
+		resetPals();
+		if(onRelease) {
+			onRelease(curr_note);
+		}
+
+		setKeyPal(note);
+	
+		if(onNote) {
+			onNote(note);
+		}
+		
+		curr_note = note;
+
+		// draw();
+	}
+}
+
+
 void Piano::penUp(u8 px, u8 py)
 {
 	resetPals();

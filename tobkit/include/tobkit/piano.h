@@ -14,6 +14,7 @@ class Piano: public Widget {
 		// Event calls
 		void penDown(u8 px, u8 py);
 		void penUp(u8 px, u8 py);
+		void penMove(u8 px, u8 py);
 		
 		// Callback registration
 		void registerNoteCallback(void (*onNote_)(u8));
