@@ -44,7 +44,7 @@ PatternView::PatternView(u8 _x, u8 _y, u8 _width, u8 _height, uint16 **_vram, St
 	cb_col1_highlight(RGB15(28,15,0)|BIT(15)),
 	cb_col2_highlight(RGB15(28,28,0)|BIT(15)),
 	col_left_numbers(RGB15(28,15,0)|BIT(15)),
-	col_notes(RGB15(3,11,31)|BIT(15)),
+	col_notes(RGB15(9,15,31)|BIT(15)), /* RGB15(3,11,31) */
 	col_instr(RGB15(31,11,0)|BIT(15)),
 	col_volume(RGB15(0,27,0)|BIT(15)),
 	col_notes_dark(RGB15(0,6,26)|BIT(15)),

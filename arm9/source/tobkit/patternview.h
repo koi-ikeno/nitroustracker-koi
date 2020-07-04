@@ -29,7 +29,7 @@
 #include "ntxm/song.h"
 
 #include "../state.h"
-#include "font_3x5.h"
+#include "font_3x5_raw.h"
 
 #define PV_BORDER_WIDTH	10
 #define PV_CURSORBAR_Y	88
@@ -170,7 +170,7 @@ class PatternView: public Widget {
 			for(j=0;j<5;++j) {
 				for(i=0;i<3;++i) {
 					u16 pixelidx = 3*22*j+3*c+i;
-					if(font_3x5[pixelidx/8]&BIT(pixelidx%8)) {
+					if(font_3x5_raw[pixelidx/8]&BIT(pixelidx%8)) {
 						//*(*vram+SCREEN_WIDTH*(2+cy*8+j)+1+cx*4+i) = col;
 						*(*vram+SCREEN_WIDTH*(y+cy+j)+x+cx+i) = col;
 					}
