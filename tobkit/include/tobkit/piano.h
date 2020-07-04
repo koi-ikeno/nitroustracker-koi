@@ -18,7 +18,7 @@ class Piano: public Widget {
 		
 		// Callback registration
 		void registerNoteCallback(void (*onNote_)(u8));
-		void registerReleaseCallback(void (*onRelease_)(u8));
+		void registerReleaseCallback(void (*onRelease_)(u8, bool));
 		
 		// Key label handling
 		void showKeyLabels(void);
@@ -27,7 +27,7 @@ class Piano: public Widget {
 		
 	private:
 		void (*onNote)(u8);
-		void (*onRelease)(u8);
+		void (*onRelease)(u8, bool);
 		uint16 *char_base, *map_base;
 		
 		void draw(void);

@@ -313,6 +313,16 @@ void updateKeyLabels(void)
 	}
 }
 
+static void handleNoteAdvanceRow(void)
+{
+	// Check if we are not at the bottom and only scroll down as far as possible
+	if((state->playing == false)||(state->pause==true))
+	{
+		state->row += state->add;
+		state->row %= song->getPatternLength(song->getPotEntry(state->potpos));
+	}
+}
+
 void handleNoteStroke(u8 note)
 {
 	// If we are recording
@@ -327,13 +337,6 @@ void handleNoteStroke(u8 note)
 		} else {
 			song->getPattern(song->getPotEntry(state->potpos))[state->channel][state->row].note = state->basenote + note;
 			song->getPattern(song->getPotEntry(state->potpos))[state->channel][state->row].instrument = state->instrument;
-		}
-
-		// Check if we are not at the bottom and only scroll down as far as possible
-		if((state->playing == false)||(state->pause==true))
-		{
-			state->row += state->add;
-			state->row %= song->getPatternLength(song->getPotEntry(state->potpos));
 		}
 
 		// Redraw
@@ -373,8 +376,21 @@ void handleNoteStroke(u8 note)
 	}
 }
 
-void handleNoteRelease(u8 note)
+void handleNoteRelease(u8 note, bool moved)
 {
+	// If we are recording
+	if((state->recording == true) && !moved)
+	{
+		// Advance row
+		handleNoteAdvanceRow();
+
+		// Redraw
+		drawMainScreen();
+		//////////////////
+		DC_FlushAll();
+		//////////////////
+	}
+
 	CommandStopInst(255);
 
 #ifdef WIFI

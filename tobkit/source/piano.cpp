@@ -65,7 +65,7 @@ void Piano::penMove(u8 px, u8 py)
 	if (note != curr_note) {
 		resetPals();
 		if(onRelease) {
-			onRelease(curr_note);
+			onRelease(curr_note, true);
 		}
 
 		setKeyPal(note);
@@ -87,7 +87,7 @@ void Piano::penUp(u8 px, u8 py)
 	
 	if(onRelease)
 	{
-		onRelease(curr_note);
+		onRelease(curr_note, false);
 	}
 }
 
@@ -96,7 +96,7 @@ void Piano::registerNoteCallback(void (*onNote_)(u8)) {
 	onNote = onNote_;
 }
 
-void Piano::registerReleaseCallback(void (*onRelease_)(u8)) {
+void Piano::registerReleaseCallback(void (*onRelease_)(u8, bool)) {
 	onRelease = onRelease_;
 }
 
