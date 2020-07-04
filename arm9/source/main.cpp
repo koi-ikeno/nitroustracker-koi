@@ -3271,6 +3271,25 @@ void VblankHandler(void)
 			fastscroll = false;
 	}
 
+	// Easy Piano pak handling logic
+	if (pianoIsInserted())
+	{
+		pianoScanKeys();
+		u16 piano_down = pianoKeysDown();
+
+		for (u16 i = 0; i < 15; i++) {
+			if (i > 10 && i < 13)
+				continue;
+			
+			u16 note_val = (i >= 13) ? (i - 2) : i;
+
+			if (piano_down & (1 << i)) {
+				handleNoteStroke(note_val);
+				handleNoteRelease(note_val, false);
+			}
+ 		}
+	}
+
 	// Constantly update pattern view while playing
 	if( ( state->playing == true ) && ( (state->recording == false) || ( (state->recording == true) && (frame == 0) ) ) )
 		drawMainScreen();
