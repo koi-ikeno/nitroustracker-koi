@@ -989,7 +989,7 @@ void drawMainScreen(void)
 void redrawSubScreen(void)
 {
 	// Fill screen
-	u16 col = RGB15(4,6,15)|BIT(15);
+	u16 col = settings->getTheme()->col_bg;
 	u32 colcol = col | col << 16;
 	dmaFillWords(colcol, sub_vram, 256 * 153 * 2);
 
@@ -1090,7 +1090,7 @@ void setRecordMode(bool is_on)
 	if(is_on)
 		col = RGB15(31, 0, 0) | BIT(15); // red
 	else
-		col = RGB15(4,6,15) | BIT(15); // bg color
+		col = settings->getTheme()->col_bg; // bg color
 
 	for(u16 i=0; i<256; ++i)
 		sub_vram[i] = col;
