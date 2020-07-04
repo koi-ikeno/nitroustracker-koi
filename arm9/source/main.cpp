@@ -22,7 +22,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define DEBUG
+//#define DEBUG
 #define GURU // Show guru meditations
 //#define SPLASH
 //#define WIFIDEBUG
@@ -99,8 +99,6 @@
 #include <user_debugger.h>
 #endif
 #include <dswifi9.h>
-
-#define PEN_DOWN (~IPC->buttons & (1 << 6))
 
 #define EXTERNAL_DATA(name) \
   extern const uint8  name[]; \
@@ -2006,7 +2004,9 @@ void showMessage(const char *msg)
 
 void showAboutBox(void)
 {
-	mb = new MessageBox(&sub_vram, "nitrotracker.tobw.net", 1, "track on!", deleteMessageBox);
+	char msg[256];
+	snprintf(msg, 256, "unofficial : %s", __DATE__);
+	mb = new MessageBox(&sub_vram, msg, 1, "track on!", deleteMessageBox);
 	gui->registerOverlayWidget(mb, 0, SUB_SCREEN);
 	mb->reveal();
 }
