@@ -112,8 +112,8 @@ void Widget::drawString(const char* str, u8 tx, u8 ty, u8 maxwidth, u16 color)
 	{
 		charidx = getCharIdx(str[pos]);
 
-		for(j=0;j<11;++j) {
-			col = font_8x11_raw[N_FONT_CHARS*j+charidx];
+		for(j=0;j<N_FONT_HEIGHT;++j) {
+			col = font_8x11_raw[N_FONT_HEIGHT*charidx + j];
 			for(i=0;i<8;++i,col>>=1) {
 				// Print a character from the bitmap font
 				// each char is 8 pixels wide, and 8 pixels
@@ -121,11 +121,6 @@ void Widget::drawString(const char* str, u8 tx, u8 ty, u8 maxwidth, u16 color)
 				if(col & 1) {
 					*(*vram+SCREEN_WIDTH*(j+y+ty)+(i+x+tx+drawpos)) = color;
 				}
-				/*
-				col = font_8x11[512*j+charidx*8+i];
-				if(col & BIT(15)) { // Alpha bit test
-					*(*vram+SCREEN_WIDTH*(j+y+ty)+(i+x+tx+drawpos)) = col;
-				}*/
 			}
 		}
 
