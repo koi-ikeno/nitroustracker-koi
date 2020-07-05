@@ -19,6 +19,9 @@ endif
 # all directories are relative to this makefile
 #---------------------------------------------------------------------------------
 BUILD		:=	build
+ifeq ($(DEBUG),true)
+BUILD		:=	build-debug
+endif
 SOURCES		:=	source  
 INCLUDES	:=	include build
 DATA		:=
@@ -35,13 +38,17 @@ CFLAGS	:=	-g -Wall -O2\
 		$(ARCH)
 
 CFLAGS	+=	$(INCLUDE) -DARM7
-CXXFLAGS	:=	$(CFLAGS) -fno-rtti -fno-exceptions -fno-rtti
+ifeq ($(DEBUG),true)
+CFLAGS	+=	-DDEBUG
+LIBS	:=	-lntxm7d -ldswifi7 -lnds7d
+else
+LIBS	:=	-lntxm7 -ldswifi7 -lnds7
+endif
 
+CXXFLAGS	:=	$(CFLAGS) -fno-rtti -fno-exceptions -fno-rtti
 
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=ds_arm7.specs -g $(ARCH) -Wl,-Map,$(notdir $*).map
-
-LIBS	:=	-lntxm7 -ldswifi7 -lnds7
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
@@ -57,8 +64,12 @@ LIBDIRS	:=	$(LIBNDS) $(LIBNTXM)
  
 ifneq ($(BUILD),$(notdir $(CURDIR)))
 #---------------------------------------------------------------------------------
- 
+
+ifeq ($(DEBUG),true)
+export ARM7ELF	:=	$(CURDIR)/$(TARGET).arm7.debug.elf
+else
 export ARM7ELF	:=	$(CURDIR)/$(TARGET).arm7.elf
+endif
 export DEPSDIR	:=	$(CURDIR)/$(BUILD)
 
 export VPATH	:=	$(foreach dir,$(SOURCES),$(CURDIR)/$(dir))
@@ -101,7 +112,7 @@ $(BUILD):
 #---------------------------------------------------------------------------------
 clean:
 	@echo clean ...
-	@rm -fr $(BUILD) *.elf
+	@rm -fr build build-debug *.elf
  
  
 #---------------------------------------------------------------------------------

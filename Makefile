@@ -23,12 +23,12 @@ export TOPDIR		:=	$(CURDIR)
 #---------------------------------------------------------------------------------
 export PATH		:=	$(DEVKITARM)/bin:$(PATH)
 
-.PHONY: libdsmi libntxm tobkit $(TARGET).arm7 $(TARGET).arm9
+.PHONY: libdsmi libntxm tobkit tobkit-debug
 
 #---------------------------------------------------------------------------------
 # main targets
 #---------------------------------------------------------------------------------
-all: $(TARGET).ds.gba $(TARGET).gba.nds
+all: $(TARGET).nds $(TARGET).debug.nds
 
 libntxm:
 	@make -C $(LIBNTXM)
@@ -36,36 +36,41 @@ libntxm:
 tobkit:
 	@make -C tobkit
 
+tobkit-debug:
+	@make -C tobkit DEBUG=true
+
 libdsmi:
 	@make -C $(LIBDSMI)
-
-$(TARGET).ds.gba	: $(TARGET).nds
-	
-
-$(TARGET).gba.nds: $(TARGET).nds
-	cat ndsloader.bin $(TARGET).nds > $(TARGET).gba.nds
 
 #---------------------------------------------------------------------------------
 $(TARGET).nds	:	libdsmi libntxm tobkit arm7/$(TARGET).elf arm9/$(TARGET).elf
 	ndstool -c $(TARGET).nds -7 arm7/$(TARGET).arm7.elf -9 arm9/$(TARGET).arm9.elf -b icon.bmp "NitroTracker"
 
+$(TARGET).debug.nds	:	libdsmi libntxm tobkit-debug arm7/$(TARGET).debug.elf arm9/$(TARGET).debug.elf
+	ndstool -c $(TARGET).debug.nds -7 arm7/$(TARGET).arm7.debug.elf -9 arm9/$(TARGET).arm9.debug.elf -b icon.bmp "NitroTracker (debug)"
+
 #---------------------------------------------------------------------------------
-$(TARGET).arm7	: arm7/$(TARGET).elf
-	
-$(TARGET).arm9	: arm9/$(TARGET).elf
-	
-#---------------------------------------------------------------------------------
+arm7/$(TARGET).debug.elf:
+	$(MAKE) -C arm7 DEBUG=true
+
 arm7/$(TARGET).elf:
-	$(MAKE) -C arm7
-	
+	$(MAKE) -C arm7 DEBUG=false
+
 #---------------------------------------------------------------------------------
+arm9/$(TARGET).debug.elf:
+	$(MAKE) -C arm9 DEBUG=true
+
 arm9/$(TARGET).elf:
-	$(MAKE) -C arm9
+	$(MAKE) -C arm9 DEBUG=false
 
 clean:
-	$(MAKE) -C arm9 clean
-	$(MAKE) -C arm7 clean
-	rm -f $(TARGET).ds.gba $(TARGET).nds
+	$(MAKE) -C arm9 clean DEBUG=true
+	$(MAKE) -C arm7 clean DEBUG=true
+	$(MAKE) -C tobkit clean DEBUG=true
+	$(MAKE) -C arm9 clean DEBUG=false
+	$(MAKE) -C arm7 clean DEBUG=false
+	$(MAKE) -C tobkit clean DEBUG=false
+	rm -f $(TARGET).debug.nds $(TARGET).nds
 
 # Custom targets for copying stuff to the DS
 -include mytargets.mk

@@ -17,6 +17,9 @@ include $(DEVKITARM)/ds_rules
 #---------------------------------------------------------------------------------
 TARGET		:=	$(shell basename $(CURDIR))
 BUILD		:=	build
+ifeq ($(DEBUG),true)
+BUILD		:=	build-debug
+endif
 SOURCES		:=	source
 DATA		:=	data
 INCLUDES	:=	include
@@ -33,6 +36,10 @@ CFLAGS	:=	-g -Wall -O2\
 		$(ARCH)
 
 CFLAGS	+=	$(INCLUDE) -DARM9
+ifeq ($(DEBUG),true)
+CFLAGS	+=	-DDEBUG
+endif
+
 CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions
 
 ASFLAGS	:=	-g $(ARCH) -march=armv5te -mtune=arm946e-s
@@ -47,7 +54,11 @@ LIBDIRS :=	$(LIBNDS)
 ifneq ($(BUILD),$(notdir $(CURDIR)))
 #---------------------------------------------------------------------------------
 
+ifeq ($(DEBUG),true)
+export OUTPUT	:=	$(CURDIR)/lib/lib$(TARGET)d.a
+else
 export OUTPUT	:=	$(CURDIR)/lib/lib$(TARGET).a
+endif
 
 export VPATH	:=	$(foreach dir,$(SOURCES),$(CURDIR)/$(dir)) \
 			$(foreach dir,$(DATA),$(CURDIR)/$(dir))
@@ -95,7 +106,7 @@ $(BUILD): lib
 #---------------------------------------------------------------------------------
 clean:
 	@echo clean ...
-	@rm -fr $(BUILD) lib
+	@rm -fr build build-debug lib
 
 install: all
 	cp lib/*.a $(DEVKITPRO)/libnds/lib

@@ -22,7 +22,6 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-//#define DEBUG
 #define GURU // Show guru meditations
 //#define SPLASH
 //#define WIFIDEBUG
