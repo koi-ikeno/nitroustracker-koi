@@ -20,13 +20,13 @@ class NumberSlider: public Widget {
 		s32 getValue(void);
 		
 		// Callback registration
-		void registerPreChangeCallback(void (*onPreChange_)(void));
+		void registerPostChangeCallback(void (*onPostChange_)(s32));
 		void registerChangeCallback(void (*onChange_)(s32));
 		
 	private:
 		void draw(void);
 		
-		void (*onPreChange)(void);
+		void (*onPostChange)(s32);
 		void (*onChange)(s32);
 		
 		s32 value;
