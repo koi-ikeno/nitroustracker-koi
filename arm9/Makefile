@@ -47,6 +47,7 @@ ifeq ($(DEBUG),true)
 CFLAGS	+=	-DDEBUG
 LIBS	:= -ltobkitd -lntxm9d -ldsmi -ldswifi9 -lfat -lnds9d
 else
+CFLAGS	+=	-DNDEBUG
 LIBS	:= -ltobkit -lntxm9 -ldsmi -ldswifi9 -lfat -lnds9
 endif
 

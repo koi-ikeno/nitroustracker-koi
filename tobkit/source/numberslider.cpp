@@ -21,6 +21,10 @@ void NumberSlider::pleaseDraw(void) {
 // Event calls
 void NumberSlider::penDown(u8 px, u8 py)
 {
+	if(onPreChange!=0) {
+		onPreChange();
+	}
+
 	if((px>x)&&(px<x+32)&&(py>y)&&(py<y+17)) {
 		btnstate = true;
 		lasty = py;
@@ -110,6 +114,10 @@ s32 NumberSlider::getValue(void) {
 }
 
 // Callback registration
+void NumberSlider::registerPreChangeCallback(void (*onPreChange_)(void)) {
+	onPreChange = onPreChange_;
+}
+
 void NumberSlider::registerChangeCallback(void (*onChange_)(s32)) {
 	onChange = onChange_;
 }

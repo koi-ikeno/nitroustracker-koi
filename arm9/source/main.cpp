@@ -92,6 +92,9 @@
 #include "sampleedit_draw_raw.h"
 #include "sampleedit_draw_small_raw.h"
 
+#include "cell_array.h"
+#include "undo.h"
+
 #include <fat.h>
 #include <libdsmi.h>
 #ifdef WIFIDEBUG
@@ -212,6 +215,7 @@ GUI *gui;
 	Button *buttonins, *buttondel, *buttonstopnote2, *buttoncolselect, *buttonemptynote2, *buttonunmuteall;
 	BitButton *buttonswitchmain;
 	Button *buttoncut, *buttoncopy, *buttonpaste, *buttonsetnotevol;
+	Button *buttonundo;
 	PatternView *pv;
 	NumberSlider *nsnotevolume;
 	Label *labelmute, *labelnotevol;
@@ -229,8 +233,8 @@ State *state;
 Settings *settings;
 XMTransport xm_transport;
 
-Cell **clipboard = 0;
-u16 clipboard_width = 0, clipboard_height = 0;
+CellArray *clipboard = NULL;
+UndoBuffer *undo_buffer = NULL;
 
 u8 dsmw_lastnotes[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 u8 dsmw_lastchannels[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -352,7 +356,7 @@ static bool uiPotSelection(u16 *sel_x1, u16 *sel_y1, u16 *sel_x2, u16 *sel_y2, b
 		if (clear)
 			pv->clearSelection();
 	}
-	
+
 	return is_box;
 }
 
@@ -360,6 +364,7 @@ void handleNoteFill(u8 note)
 {
 	u16 sel_x1, sel_y1, sel_x2, sel_y2;
 	bool is_box = uiPotSelection(&sel_x1, &sel_y1, &sel_x2, &sel_y2, true);
+	undo_buffer->insert(new MultiCellUndoAction(state, song, sel_x1, sel_y1, sel_x2, sel_y2));
 	
 	for (u16 chn = sel_x1; chn <= sel_x2; chn++)
 		for (u16 row = sel_y1; row <= sel_y2; row++)
@@ -371,6 +376,9 @@ void handleNoteFill(u8 note)
 	DC_FlushAll();
 }
 
+bool hasPreStrokeCell;
+Cell preStrokeCell;
+
 void handleNoteStroke(u8 note)
 {
 	if (note == EMPTY_NOTE || note == STOP_NOTE) return;
@@ -378,6 +386,11 @@ void handleNoteStroke(u8 note)
 	// If we are recording
 	if(state->recording == true)
 	{
+		if (!hasPreStrokeCell)
+		{
+			hasPreStrokeCell = true;
+			preStrokeCell = song->getPattern(song->getPotEntry(state->potpos))[state->channel][state->row];
+		}
 		uiSetNote(state->channel, state->row, note);
 
 		// Redraw
@@ -419,6 +432,12 @@ void handleNoteRelease(u8 note, bool moved)
 	// If we are recording
 	if((state->recording == true) && !moved)
 	{
+		if (hasPreStrokeCell)
+		{
+			undo_buffer->insert(new SingleCellUndoAction(state, preStrokeCell));
+			hasPreStrokeCell = false;
+		}
+
 		// Advance row
 		handleNoteAdvanceRow();
 
@@ -961,6 +980,13 @@ void stopNoteStroke(void) {
 	redraw_main_requested = true;
 }
 
+void undoOp(void) {
+	undo_buffer->undo(song);
+	if (undo_buffer->queue_length() <= 0)
+		buttonundo->hide();
+	redraw_main_requested = true;
+}
+
 
 void delNote(void) // Delete a cell and move the cells below it up
 {
@@ -968,6 +994,9 @@ void delNote(void) // Delete a cell and move the cells below it up
 	uiPotSelection(&sel_x1, &sel_y1, &sel_x2, &sel_y2, true);
 	u16 sel_h = sel_y2 - sel_y1 + 1;
 	s32 ptn_len = song->getPatternLength(song->getPotEntry(state->potpos)); 
+
+	// TODO: more efficient undo
+	undo_buffer->insert(new MultiCellUndoAction(state, song, sel_x1, sel_y1, sel_x2, ptn_len - 1));
 
 	//if(!state->recording) return;
 	Cell **ptn = song->getPattern(song->getPotEntry(state->potpos));
@@ -995,8 +1024,12 @@ void insNote(void)
 	u16 sel_h = sel_y2 - sel_y1 + 1;
 
 	Cell **ptn = song->getPattern(song->getPotEntry(state->potpos));
-	u16 ptnlen = song->getPatternLength(song->getPotEntry(state->potpos));
-	for(s32 row=ptnlen - 1 - sel_h; row >= sel_y1; --row)
+	u16 ptn_len = song->getPatternLength(song->getPotEntry(state->potpos));
+
+	// TODO: more efficient undo
+	undo_buffer->insert(new MultiCellUndoAction(state, song, sel_x1, sel_y1, sel_x2, ptn_len - 1));
+
+	for(s32 row=ptn_len - 1 - sel_h; row >= sel_y1; --row)
 		for (s32 chn=sel_x1; chn <= sel_x2; ++chn)
 			ptn[chn][row + sel_h] = ptn[chn][row];
 
@@ -1656,13 +1689,23 @@ void setNoteVol(u16 vol)
 	DC_FlushAll();
 }
 
+// number slider
 void handleNoteVolumeChanged(s32 vol)
 {
 	setNoteVol(vol);
 }
 
+void handlePreEditSelection(void)
+{
+	u16 sel_x1, sel_y1, sel_x2, sel_y2;
+	uiPotSelection(&sel_x1, &sel_y1, &sel_x2, &sel_y2, false);
+	undo_buffer->insert(new MultiCellUndoAction(state, song, sel_x1, sel_y1, sel_x2, sel_y2));
+}
+
+// button
 void handleSetNoteVol(void)
 {
+	handlePreEditSelection();
 	setNoteVol(nsnotevolume->getValue());
 	redraw_main_requested = true;
 }
@@ -2045,37 +2088,19 @@ void showAboutBox(void)
 	mb->reveal();
 }
 
-void clipboard_alloc(u16 width, u16 height)
-{
-	if(clipboard != 0) {
-		for(u16 i=0; i<clipboard_width; ++i) {
-			free(clipboard[i]);
-		}
-		free(clipboard);
-	}
-
-	clipboard = (Cell**)malloc(sizeof(Cell*)*width);
-	for(u16 i=0; i<width; ++i) {
-		clipboard[i] = (Cell*)malloc(sizeof(Cell)*height);
-	}
-	clipboard_width = width;
-	clipboard_height = height;
-}
-
 void ptnCopy(bool cut)
 {
 	u16 sel_x1, sel_y1, sel_x2, sel_y2;
 	uiPotSelection(&sel_x1, &sel_y1, &sel_x2, &sel_y2, true);
-	u16 n_cols = sel_x2 - sel_x1 + 1;
-	u16 n_rows = sel_y2 - sel_y1 + 1;
-
-	clipboard_alloc(n_cols, n_rows);
 
 	Cell **ptn = song->getPattern(song->getPotEntry(state->potpos));
-	for(u16 col=sel_x1; col<=sel_x2; ++col) {
-		for(u16 row=sel_y1; row<=sel_y2; ++row) {
-			clipboard[col-sel_x1][row-sel_y1] = ptn[col][row];
-		}
+
+	if(clipboard != NULL) delete clipboard;
+	clipboard = new CellArray(ptn, sel_x1, sel_y1, sel_x2, sel_y2);
+	if (!clipboard->valid())
+	{
+		delete clipboard;
+		clipboard = NULL;
 	}
 
 	if(cut == true) {
@@ -2102,30 +2127,14 @@ void handleCopy(void)
 
 void handlePaste(void)
 {
-	if(clipboard != 0) {
-		u16 startcol = state->channel;
-		u16 endcol;
-		if(startcol + clipboard_width - 1 >= song->getChannels()) {
-			endcol = song->getChannels() - 1;
-		} else {
-			endcol = startcol + clipboard_width - 1;
-		}
-		u16 startrow = state->row;
-		u16 endrow;
-		u16 ptnlen = song->getPatternLength(song->getPotEntry(state->potpos));
-		if(startrow + clipboard_height -1 >= ptnlen) {
-			endrow = ptnlen-1;
-		} else {
-			endrow = startrow + clipboard_height - 1;
-		}
-
+	if(clipboard != NULL) {
 		Cell **ptn = song->getPattern(song->getPotEntry(state->potpos));
-		for(u16 col=startcol; col<=endcol; ++col) {
-			for(u16 row=startrow; row<=endrow; ++row) {
-				ptn[col][row] = clipboard[col-startcol][row-startrow];
-			}
-		}
+		u16 ptn_width = song->getChannels();
+		u16 ptn_height = song->getPatternLength(song->getPotEntry(state->potpos));
+		undo_buffer->insert(new MultiCellUndoAction(state, song, state->channel, state->row, clipboard));
 
+		clipboard->paste(ptn, ptn_width, ptn_height, state->channel, state->row);
+		
 		DC_FlushAll();
 	}
 
@@ -2956,6 +2965,7 @@ void setupGUI(void)
 	buttonpause        = new BitButton(180, 4  , 23, 15, &sub_vram, icon_pause_raw, 12, 12, 5, 0, false);
 	buttonstop         = new BitButton(204, 4  , 23, 15, &sub_vram, icon_stop_raw, 12, 12, 5, 0);
 
+	buttonundo         = new Button(225, 127, 30, 12, &sub_vram, false);
 	buttoninsnote2     = new Button(225, 140, 30, 12, &sub_vram);
 	buttondelnote2     = new Button(225, 153, 30, 12, &sub_vram);
 	buttonemptynote    = new Button(225, 166, 30, 12, &sub_vram);
@@ -2964,6 +2974,9 @@ void setupGUI(void)
 	buttonrenameinst   = new Button(141, 20 , 23, 12, &sub_vram);
 
 	tbmultisample      = new ToggleButton(165, 21, 10, 10, &sub_vram);
+
+	buttonundo->setCaption("undo");
+	buttonundo->registerPushCallback(undoOp);
 
 	cbloop = new CheckBox(178, 19, 30, 12, &sub_vram, true, false, true);
 
@@ -3024,6 +3037,7 @@ void setupGUI(void)
 		labelnotevol->setCaption("vol");
 
 		nsnotevolume	 = new NumberSlider(225, 54, 30, 17, &main_vram_back, 127, 0, 127, true);
+		nsnotevolume->registerPreChangeCallback(handlePreEditSelection);
 		nsnotevolume->registerChangeCallback(handleNoteVolumeChanged);
 
 		buttonsetnotevol = new Button(225, 70, 30, 12, &main_vram_back);
@@ -3090,6 +3104,7 @@ void setupGUI(void)
 	gui->registerWidget(buttonstop, 0, SUB_SCREEN);
 	gui->registerWidget(buttonpause, 0, SUB_SCREEN);
 	gui->registerWidget(buttonemptynote, 0, SUB_SCREEN);
+	gui->registerWidget(buttonundo, 0, SUB_SCREEN);
 	gui->registerWidget(buttoninsnote2, 0, SUB_SCREEN);
 	gui->registerWidget(buttondelnote2, 0, SUB_SCREEN);
 	gui->registerWidget(buttonrenameinst, 0, SUB_SCREEN);
@@ -3294,6 +3309,10 @@ void VblankHandler(void)
 		if(keysup & mykey_B)
 			fastscroll = false;
 	}
+
+	// TODO: move to ->insert
+	if (undo_buffer->queue_length() > 0)
+		buttonundo->show();
 
 	// Easy Piano pak handling logic
 	if (pianoIsInserted())
@@ -3558,6 +3577,7 @@ int main(int argc, char **argv) {
 	}
 
 	state = new State();
+	undo_buffer = new UndoBuffer(isDSiMode() ? 1024 : 256);
 
 	settings = new Settings(launch_path, fat_success);
 
