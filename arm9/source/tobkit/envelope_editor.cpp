@@ -236,13 +236,13 @@ void EnvelopeEditor::penMove(u8 px, u8 py)
 			s32 dx = realX - points_x[n_points-1];
 			s32 dy = realY - points_y[n_points-1];
 
-			double last_len = sqrt((double)(last_dx*last_dx + last_dy*last_dy));
-			double len = sqrt((double)(dx*dx + dy*dy));
+			int32 len = sqrtf32(inttof32(dx*dx + dy*dy)); /* 20.12 */
 
-			double angle = acos((double)(last_dx*dx + last_dy*dy) / (double)( last_len * len )) * 180.0 / M_PI ;
-
-			if( (len > DRAW_MIN_POINT_DIST) || (realY == points_max_y) || (realY == 0) )
+			if( (f32toint(len) > DRAW_MIN_POINT_DIST) || (realY == points_max_y) || (realY == 0) )
 			{
+				int32 last_len = sqrtf32(inttof32(last_dx*last_dx + last_dy*last_dy)); /* 20.12 */
+				s16 angle = angleToDegrees(acosLerp(divf32(inttof32(last_dx*dx + last_dy*dy), mulf32(last_len, len))));
+
 				if (angle < DRAW_NEW_POINT_ANGLE)
 				{
 					// Take the point with you
