@@ -94,6 +94,12 @@ void Widget::disable(void)
 
 /* ===================== PROTECTED ===================== */
 
+static inline u8 getCharIdx(char c)
+{
+	char *charptr = strchr(fontchars, c);
+	return charptr ? (charptr - fontchars) : 66 /* ? */;
+}
+
 // Draw utility functions
 
 void Widget::drawString(const char* str, u8 tx, u8 ty, u8 maxwidth, u16 color)
@@ -101,16 +107,10 @@ void Widget::drawString(const char* str, u8 tx, u8 ty, u8 maxwidth, u16 color)
 	// Draw text
 	u8 pos=0, charidx, i, j;
 	u16 drawpos = 0; u8 col;
-	char *charptr;
 
 	while( (pos<strlen(str)) && (drawpos+6<maxwidth) )
 	{
-		charptr = strchr(fontchars, str[pos]);
-		if(charptr==0) {
-			charidx = 66; // '?'
-		} else {
-			charidx = charptr - fontchars;
-		}
+		charidx = getCharIdx(str[pos]);
 
 		for(j=0;j<11;++j) {
 			col = font_8x11_raw[N_FONT_CHARS*j+charidx];
@@ -297,14 +297,8 @@ u8 Widget::getStringWidth(const char *str, u16 limit)
 	if((limit!=USHRT_MAX)&&(limit<len)) {
 		len = limit;
 	}
-	char *charptr;
 	for(i=0;i<len;++i) {
-		charptr = strchr(fontchars, str[i]);
-		if(charptr==0) {
-			charidx = 39; // '_'
-		} else {
-			charidx = charptr - fontchars;
-		}
+		charidx = getCharIdx(str[i]);
 		res += charwidths_8x11[charidx] + 1;
 	}
 	return res;
