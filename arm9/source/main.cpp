@@ -324,21 +324,61 @@ static void handleNoteAdvanceRow(void)
 	}
 }
 
+static void uiSetNote(u16 chn, u16 row, u8 note)
+{
+	// Check if this was an empty- or stopnote
+	if((note==EMPTY_NOTE)||(note==STOP_NOTE)) {
+		// Because then we don't use the offset since they have fixed indices
+		song->clearCell(&(song->getPattern(song->getPotEntry(state->potpos))[chn][row]));
+		if(note==STOP_NOTE)
+			song->getPattern(song->getPotEntry(state->potpos))[chn][row].note = note;
+	} else {
+		song->getPattern(song->getPotEntry(state->potpos))[chn][row].note = state->basenote + note;
+		song->getPattern(song->getPotEntry(state->potpos))[chn][row].instrument = state->instrument;
+	}
+}
+
+// returns selection or currently highlighted cell
+static bool uiPotSelection(u16 *sel_x1, u16 *sel_y1, u16 *sel_x2, u16 *sel_y2, bool clear)
+{
+	bool is_box = pv->getSelection(sel_x1, sel_y1, sel_x2, sel_y2);
+	if (!is_box)
+	{
+		*sel_x1 = *sel_x2 = state->channel;
+		*sel_y1 = *sel_y2 = state->row;
+	}
+	else
+	{
+		if (clear)
+			pv->clearSelection();
+	}
+	
+	return is_box;
+}
+
+void handleNoteFill(u8 note)
+{
+	u16 sel_x1, sel_y1, sel_x2, sel_y2;
+	bool is_box = uiPotSelection(&sel_x1, &sel_y1, &sel_x2, &sel_y2, true);
+	
+	for (u16 chn = sel_x1; chn <= sel_x2; chn++)
+		for (u16 row = sel_y1; row <= sel_y2; row++)
+			uiSetNote(chn, row, note);
+
+	if (!is_box)
+		handleNoteAdvanceRow();
+
+	DC_FlushAll();
+}
+
 void handleNoteStroke(u8 note)
 {
+	if (note == EMPTY_NOTE || note == STOP_NOTE) return;
+
 	// If we are recording
 	if(state->recording == true)
 	{
-		// Check if this was an empty- or stopnote
-		if((note==EMPTY_NOTE)||(note==STOP_NOTE)) {
-			// Because then we don't use the offset since they have fixed indices
-			song->clearCell(&(song->getPattern(song->getPotEntry(state->potpos))[state->channel][state->row]));
-			if(note==STOP_NOTE)
-				song->getPattern(song->getPotEntry(state->potpos))[state->channel][state->row].note = note;
-		} else {
-			song->getPattern(song->getPotEntry(state->potpos))[state->channel][state->row].note = state->basenote + note;
-			song->getPattern(song->getPotEntry(state->potpos))[state->channel][state->row].instrument = state->instrument;
-		}
+		uiSetNote(state->channel, state->row, note);
 
 		// Redraw
 		DC_FlushAll();
@@ -346,7 +386,7 @@ void handleNoteStroke(u8 note)
 	}
 
 	// If we are in sample mapping mode, map the pressed key to the selected sample for the current instrument
-	if((state->map_samples == true)&&(note!=EMPTY_NOTE)&&(note!=STOP_NOTE))
+	if(state->map_samples == true)
 	{
 		Instrument *inst = song->getInstrument(state->instrument);
 		if(inst != NULL)
@@ -362,21 +402,20 @@ void handleNoteStroke(u8 note)
 	}
 
 	// Play the note
-	if((note!=EMPTY_NOTE)&&(note!=STOP_NOTE))
-	{
-		// Send "play inst" command
-		CommandPlayInst(state->instrument, state->basenote + note, 255, 255); // channel==255 -> search for free channel
+	// Send "play inst" command
+	CommandPlayInst(state->instrument, state->basenote + note, 255, 255); // channel==255 -> search for free channel
 
 #ifdef WIFI
-		u8 midichannel = state->instrument % 16;
-		if( (state->dsmi_connected) && (state->dsmi_send) )
-			dsmi_write(NOTE_ON | midichannel, state->basenote + note, 127);
+	u8 midichannel = state->instrument % 16;
+	if( (state->dsmi_connected) && (state->dsmi_send) )
+		dsmi_write(NOTE_ON | midichannel, state->basenote + note, 127);
 #endif
-	}
 }
 
 void handleNoteRelease(u8 note, bool moved)
 {
+	if (note == EMPTY_NOTE || note == STOP_NOTE) return;
+
 	// If we are recording
 	if((state->recording == true) && !moved)
 	{
@@ -912,27 +951,36 @@ void handleTypewriterFilenameOk(void)
 
 
 void emptyNoteStroke(void) {
-	handleNoteStroke(EMPTY_NOTE);
+	handleNoteFill(EMPTY_NOTE);
 	redraw_main_requested = true;
 }
 
 
 void stopNoteStroke(void) {
-	handleNoteStroke(STOP_NOTE);
+	handleNoteFill(STOP_NOTE);
 	redraw_main_requested = true;
 }
 
 
 void delNote(void) // Delete a cell and move the cells below it up
 {
+	u16 sel_x1, sel_y1, sel_x2, sel_y2;
+	uiPotSelection(&sel_x1, &sel_y1, &sel_x2, &sel_y2, true);
+	u16 sel_h = sel_y2 - sel_y1 + 1;
+	s32 ptn_len = song->getPatternLength(song->getPotEntry(state->potpos)); 
+
 	//if(!state->recording) return;
 	Cell **ptn = song->getPattern(song->getPotEntry(state->potpos));
-	for(u16 row=state->row; row < song->getPatternLength(song->getPotEntry(state->potpos))-1; ++row) {
-		ptn[state->channel][row] = ptn[state->channel][row+1];
-	}
+	for(s32 row=sel_y1; row < ptn_len - sel_h; ++row)
+		for (s32 chn=sel_x1; chn <= sel_x2; ++chn)
+			ptn[chn][row] = ptn[chn][row + sel_h];
 
-	Cell *lastcell = &ptn[state->channel][song->getPatternLength(song->getPotEntry(state->potpos))-1];
-	song->clearCell(lastcell);
+	for(s32 row=ptn_len - sel_h; row < ptn_len; ++row)
+		for (s32 chn=sel_x1; chn <= sel_x2; ++chn)
+		{
+			Cell *lastcell = &ptn[chn][row];
+			song->clearCell(lastcell);
+		}
 
 	DC_FlushAll();
 
@@ -942,23 +990,24 @@ void delNote(void) // Delete a cell and move the cells below it up
 
 void insNote(void)
 {
+	u16 sel_x1, sel_y1, sel_x2, sel_y2;
+	uiPotSelection(&sel_x1, &sel_y1, &sel_x2, &sel_y2, true);
+	u16 sel_h = sel_y2 - sel_y1 + 1;
+
 	Cell **ptn = song->getPattern(song->getPotEntry(state->potpos));
 	u16 ptnlen = song->getPatternLength(song->getPotEntry(state->potpos));
-	for(s32 row=ptnlen-2; row >= state->row; --row) {
-		ptn[state->channel][row+1] = ptn[state->channel][row];
-	}
+	for(s32 row=ptnlen - 1 - sel_h; row >= sel_y1; --row)
+		for (s32 chn=sel_x1; chn <= sel_x2; ++chn)
+			ptn[chn][row + sel_h] = ptn[chn][row];
 
-	Cell *firstcell = &ptn[state->channel][state->row];
-	song->clearCell(firstcell);
-	/*
-	firstcell->note = EMPTY_NOTE;
-	firstcell->volume = NO_VOLUME;
-	firstcell->instrument = NO_INSTRUMENT;
-	firstcell->effect = NO_EFFECT;
-	firstcell->effect_param = ;
-	*/
+	for(s32 row=sel_y1; row <= sel_y2; ++row)
+		for (s32 chn=sel_x1; chn <= sel_x2; ++chn)
+		{
+			Cell *firstcell = &ptn[chn][row];
+			song->clearCell(firstcell);
+		}
+
 	DC_FlushAll();
-
 	redraw_main_requested = true;
 }
 
@@ -1596,23 +1645,13 @@ void handlePreviewSampleFinished(void)
 void setNoteVol(u16 vol)
 {
 	u16 sel_x1, sel_y1, sel_x2, sel_y2;
-	if(pv->getSelection(&sel_x1, &sel_y1, &sel_x2, &sel_y2) == true)
-	{
-		Cell **ptn = song->getPattern(song->getPotEntry(state->potpos));
-		for(u16 col=sel_x1; col<=sel_x2; ++col) {
-			for(u16 row=sel_y1; row<=sel_y2; ++row) {
-				if( (ptn[col][row].note != EMPTY_NOTE) && (ptn[col][row].note != STOP_NOTE) )
-					ptn[col][row].volume = vol;
-			}
+	uiPotSelection(&sel_x1, &sel_y1, &sel_x2, &sel_y2, false);
+	Cell **ptn = song->getPattern(song->getPotEntry(state->potpos));
+	for(u16 col=sel_x1; col<=sel_x2; ++col) {
+		for(u16 row=sel_y1; row<=sel_y2; ++row) {
+			if( (ptn[col][row].note != EMPTY_NOTE) && (ptn[col][row].note != STOP_NOTE) )
+				ptn[col][row].volume = vol;
 		}
-
-	}
-	else
-	{
-		Cell *cell = &(song->getPattern(song->getPotEntry(state->potpos))[state->channel][state->row]);
-		if( (cell->note != EMPTY_NOTE) && (cell->note != STOP_NOTE) )
-			cell->volume = vol;
-
 	}
 	DC_FlushAll();
 }
@@ -2026,7 +2065,7 @@ void clipboard_alloc(u16 width, u16 height)
 void ptnCopy(bool cut)
 {
 	u16 sel_x1, sel_y1, sel_x2, sel_y2;
-	if(pv->getSelection(&sel_x1, &sel_y1, &sel_x2, &sel_y2) == false) return;
+	uiPotSelection(&sel_x1, &sel_y1, &sel_x2, &sel_y2, true);
 	u16 n_cols = sel_x2 - sel_x1 + 1;
 	u16 n_rows = sel_y2 - sel_y1 + 1;
 

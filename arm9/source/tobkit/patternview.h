@@ -284,7 +284,7 @@ class PatternView: public Widget {
 
 		u16 col_lines, col_sublines, col_lines_record, cb_col1, cb_col2, cb_col1_highlight,
 			cb_col2_highlight, col_left_numbers, col_notes, col_instr, col_volume, 
-			col_notes_dark, col_instr_dark, col_volume_dark, col_bg;
+			col_notes_dark, col_instr_dark, col_volume_dark, col_bg, cb_sel_highlight;
 		
 		u16 hscrollpos;
 		

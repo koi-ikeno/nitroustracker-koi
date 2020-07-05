@@ -51,6 +51,7 @@ PatternView::PatternView(u8 _x, u8 _y, u8 _width, u8 _height, uint16 **_vram, St
 	col_instr_dark(RGB15(20,6,0)|BIT(15)),
 	col_volume_dark(RGB15(0,16,0)|BIT(15)),
 	col_bg(RGB15(4,6,15)|BIT(15)),
+	cb_sel_highlight(RGB15(31,24,0)|BIT(15)),
 	hscrollpos(0), selection_exists(false), pen_down(false)
 {
 	for(int i=0;i<32;++i)
@@ -237,16 +238,18 @@ void PatternView::unmute(u16 channel)
 void PatternView::draw(void)
 {
 	u32 colcol = col_bg | col_bg << 16;
+	s32 sel_screen_x1 = -1, sel_screen_x2 = -1, sel_screen_y1 = -1, sel_screen_y2 = -1;
+
 	dmaFillWords(colcol, *vram, 192*256*2);
 	
 	// Selection
 	if(selection_exists == true) {
 		
 		// Calculate dimensions in screen coords
-		s32 sel_screen_x1 = PV_BORDER_WIDTH + (sel_x - hscrollpos) * getCellWidth();
-		s32 sel_screen_x2 = sel_screen_x1 + sel_w * getCellWidth();
-		s32 sel_screen_y1 = (sel_y - state->row + getCursorBarPos()) * PV_CELL_HEIGHT;
-		s32 sel_screen_y2 = sel_screen_y1 + sel_h * PV_CELL_HEIGHT;
+		sel_screen_x1 = PV_BORDER_WIDTH + (sel_x - hscrollpos) * getCellWidth();
+		sel_screen_x2 = sel_screen_x1 + sel_w * getCellWidth();
+		sel_screen_y1 = (sel_y - state->row + getCursorBarPos()) * PV_CELL_HEIGHT;
+		sel_screen_y2 = sel_screen_y1 + sel_h * PV_CELL_HEIGHT;
 		
 		// Does an intersection with the screen exist?
 		if	(!(	(sel_screen_x1 >= getEffectiveWidth()) ||
@@ -262,7 +265,7 @@ void PatternView::draw(void)
 			
 			// Draw
 			drawFullBox(sel_screen_x1, sel_screen_y1, sel_screen_x2 - sel_screen_x1,
-				    sel_screen_y2 - sel_screen_y1 + 1, RGB15(31,24,0)|BIT(15)/*cb_col2_highlight*/);
+				    sel_screen_y2 - sel_screen_y1 + 1, cb_sel_highlight);
 		}
 	}
 	
@@ -297,6 +300,16 @@ void PatternView::draw(void)
 	// Cursor bar
 	drawBox(0, PV_CURSORBAR_Y, getEffectiveWidth(), PV_CELL_HEIGHT+1);
 	drawGradient(cb_col1, cb_col2, 1, PV_CURSORBAR_Y+1, getEffectiveWidth()-2, PV_CELL_HEIGHT-1);
+	if(selection_exists == true) {
+		// Cursor bar (highlighted component)
+		if (	(sel_screen_y1 <= PV_CURSORBAR_Y + 1)
+			&&	(sel_screen_y2 >= PV_CURSORBAR_Y + 1 + PV_CELL_HEIGHT-1)
+			&&	(sel_screen_x1 <= getEffectiveWidth())
+			&&	(sel_screen_x2 >= PV_BORDER_WIDTH)) {
+				s32 cursor_highlight_x1 = max(sel_screen_x1, PV_BORDER_WIDTH + 1);
+				drawFullBox(cursor_highlight_x1, PV_CURSORBAR_Y+1, sel_screen_x2 - cursor_highlight_x1 - 1, PV_CELL_HEIGHT-1, cb_sel_highlight);
+		}
+	}
 	
 	// Cursor
 	drawBox(PV_BORDER_WIDTH-1+(state->channel-hscrollpos)*getCellWidth(), PV_CURSORBAR_Y, getCellWidth()+1, PV_CELL_HEIGHT+1);
