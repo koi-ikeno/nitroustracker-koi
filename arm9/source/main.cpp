@@ -123,6 +123,7 @@ u16 *main_vram_front, *main_vram_back, *sub_vram;
 
 bool typewriter_active = false;
 bool exit_requested = false;
+volatile bool redraw_main_requested = false;
 
 u16 keys_that_are_repeated = KEY_UP | KEY_DOWN | KEY_LEFT | KEY_RIGHT;
 u16 repeatkeys = 0, repeatkeys_last = 0;
@@ -338,10 +339,8 @@ void handleNoteStroke(u8 note)
 		}
 
 		// Redraw
-		drawMainScreen();
-		//////////////////
 		DC_FlushAll();
-		//////////////////
+		redraw_main_requested = true;
 	}
 
 	// If we are in sample mapping mode, map the pressed key to the selected sample for the current instrument
@@ -383,10 +382,8 @@ void handleNoteRelease(u8 note, bool moved)
 		handleNoteAdvanceRow();
 
 		// Redraw
-		drawMainScreen();
-		//////////////////
 		DC_FlushAll();
-		//////////////////
+		redraw_main_requested = true;
 	}
 
 	CommandStopInst(255);
@@ -914,13 +911,13 @@ void handleTypewriterFilenameOk(void)
 
 void emptyNoteStroke(void) {
 	handleNoteStroke(EMPTY_NOTE);
-	drawMainScreen();
+	redraw_main_requested = true;
 }
 
 
 void stopNoteStroke(void) {
 	handleNoteStroke(STOP_NOTE);
-	drawMainScreen();
+	redraw_main_requested = true;
 }
 
 
@@ -937,7 +934,7 @@ void delNote(void) // Delete a cell and move the cells below it up
 
 	DC_FlushAll();
 
-	drawMainScreen();
+	redraw_main_requested = true;
 }
 
 
@@ -960,7 +957,7 @@ void insNote(void)
 	*/
 	DC_FlushAll();
 
-	drawMainScreen();
+	redraw_main_requested = true;
 }
 
 
@@ -1047,6 +1044,7 @@ void stop(void)
 	// resultsing in the pattern view being out of sync with the song. So we wait two
 	// frames to make sure the arm7 has really stopped and redraw the pattern.
 	swiWaitForVBlank(); swiWaitForVBlank();
+	redraw_main_requested = false;
 	drawMainScreen();
 
 #ifdef WIFI
@@ -1095,6 +1093,7 @@ void potGoto(u8 pos)
 void setRecordMode(bool is_on)
 {
 	state->recording = is_on;
+	redraw_main_requested = false;
 	drawMainScreen(); // <- must redraw because of orange lines
 
 
@@ -1192,7 +1191,7 @@ void handlePotPosChangeFromUser(u16 newpotpos)
 	// Update other GUI Elements
 	updateGuiToNewPattern(song->getPotEntry(newpotpos));
 
-	drawMainScreen();
+	redraw_main_requested = true;
 }
 
 void handlePotDec(void) {
@@ -1204,7 +1203,7 @@ void handlePotDec(void) {
 		// If the current pos was changed, switch the pattern
 		DC_FlushAll();
 
-		drawMainScreen();
+		redraw_main_requested = true;
 
 		// Update pattern length slider
 		nsptnlen->setValue(song->getPatternLength(song->getPotEntry(state->potpos)));
@@ -1230,7 +1229,7 @@ void handlePotInc(void)
 		song->setPotEntry(state->potpos, pattern);
 		DC_FlushAll();
 
-		drawMainScreen();
+		redraw_main_requested = true;
 
 		// Update pattern length slider
 		nsptnlen->setValue(song->getPatternLength(song->getPotEntry(state->potpos)));
@@ -1304,7 +1303,7 @@ void handlePtnClone(void)
 void handleChannelAdd(void)
 {
 	song->channelAdd();
-	drawMainScreen();
+	redraw_main_requested = true;
 	updateLabelChannels();
 }
 
@@ -1330,7 +1329,7 @@ void handleChannelDel(void)
 		pv->unmuteAll();
 	}
 
-	drawMainScreen();
+	redraw_main_requested = true;
 	updateLabelChannels();
 }
 
@@ -1345,7 +1344,7 @@ void handlePtnLengthChange(s32 newlength)
 		if(state->row >= newlength) {
 			state->row = newlength-1;
 		}
-		drawMainScreen();
+		redraw_main_requested = true;
 	}
 }
 
@@ -1390,6 +1389,7 @@ void zapPatterns(void)
 	state->row = 0;
 	state->channel = 0;
 
+	redraw_main_requested = false;
 	drawMainScreen();
 
 	CommandSetSong(song);
@@ -1445,6 +1445,8 @@ void handleNewRow(u16 row)
 
 	if(!state->playing)
 		return;
+
+	redraw_main_requested = true;
 
 #ifdef WIFI
 	if( (state->dsmi_connected) && (state->dsmi_send) )
@@ -1505,7 +1507,11 @@ void keyRepeatTimerHandler(void)
 	if(actual_repeatkeys) {
 		gui->buttonPress(actual_repeatkeys);
 		handleButtons(actual_repeatkeys, keysheld);
-		drawMainScreen();
+		if (redraw_main_requested)
+		{
+			redraw_main_requested = false;
+			drawMainScreen();
+		}
 	}
 
 	if(!repeatkeys) {
@@ -1641,7 +1647,7 @@ void handleNoteVolumeChanged(s32 vol)
 void handleSetNoteVol(void)
 {
 	setNoteVol(nsnotevolume->getValue());
-	drawMainScreen();
+	redraw_main_requested = true;
 }
 
 void showTypewriter(const char *prompt, const char *str, void (*okCallback)(void), void (*cancelCallback)(void))
@@ -1942,7 +1948,7 @@ void swapPatternButtons(Handedness handedness)
 		pv->setPos(0, 0);
 	}
 
-	drawMainScreen();
+	redraw_main_requested = true;
 }
 
 void handleHandednessChange(u8 handedness)
@@ -1969,6 +1975,7 @@ void switchScreens(void)
 	lcdSwap();
 	gui->switchScreens();
 	pv->clearSelection();
+	redraw_main_requested = false;
 	drawMainScreen();
 }
 
@@ -2056,14 +2063,14 @@ void ptnCopy(bool cut)
 void handleCut(void)
 {
 	ptnCopy(true);
-	drawMainScreen();
+	redraw_main_requested = true;
 	DC_FlushAll();
 }
 
 void handleCopy(void)
 {
 	ptnCopy(false);
-	drawMainScreen();
+	redraw_main_requested = true;
 }
 
 void handlePaste(void)
@@ -2095,7 +2102,7 @@ void handlePaste(void)
 		DC_FlushAll();
 	}
 
-	drawMainScreen();
+	redraw_main_requested = true;
 }
 
 void handleButtonColumnSelect(void)
@@ -2114,7 +2121,7 @@ void handleButtonColumnSelect(void)
 		y2 = song->getPatternLength(song->getPotEntry(state->potpos)) - 1;
 		pv->setSelection(x1, y1, x2, y2);
 	}
-	drawMainScreen();
+	redraw_main_requested = true;
 }
 
 void handleSampleVolumeChange(s32 newvol)
@@ -2179,13 +2186,13 @@ void handleSampleFineTuneChange(s32 newfinetune)
 void handleMuteAll(void)
 {
 	pv->muteAll();
-	drawMainScreen();
+	redraw_main_requested = true;
 }
 
 void handleUnmuteAll(void)
 {
 	pv->unmuteAll();
-	drawMainScreen();
+	redraw_main_requested = true;
 }
 
 void sample_select_all(void)
@@ -3086,14 +3093,14 @@ void move_to_bottom(void)
 {
 	state->row = song->getPatternLength(song->getPotEntry(state->potpos))-1;
 	pv->updateSelection();
-	drawMainScreen();
+	redraw_main_requested = true;
 }
 
 void move_to_top(void)
 {
 	state->row = 0;
 	pv->updateSelection();
-	drawMainScreen();
+	redraw_main_requested = true;
 }
 
 // Update the state for certain keypresses
@@ -3119,7 +3126,7 @@ void handleButtons(u16 buttons, u16 buttonsheld)
 			state->row = newrow;
 
 			pv->updateSelection();
-			drawMainScreen();
+			redraw_main_requested = true;
 
 		}
 		else if(buttons & mykey_DOWN)
@@ -3137,7 +3144,7 @@ void handleButtons(u16 buttons, u16 buttonsheld)
 			state->row = newrow;
 
 			pv->updateSelection();
-			drawMainScreen();
+			redraw_main_requested = true;
 		}
 	}
 
@@ -3146,7 +3153,7 @@ void handleButtons(u16 buttons, u16 buttonsheld)
 		if(state->channel>0) {
 			state->channel--;
 			pv->updateSelection();
-			if(!state->playing) drawMainScreen();
+			redraw_main_requested = true;
 		}
 	}
 	else if((buttons & mykey_RIGHT)&&(!typewriter_active))
@@ -3155,7 +3162,7 @@ void handleButtons(u16 buttons, u16 buttonsheld)
 		{
 			state->channel++;
 			pv->updateSelection();
-			if(!state->playing) drawMainScreen();
+			redraw_main_requested = true;
 		}
 	}
 	else if(buttons & KEY_START)
@@ -3200,7 +3207,7 @@ void VblankHandler(void)
 	if(keysdown & KEY_TOUCH)
 	{
 		gui->penDown(touch.px, touch.py);
-		drawMainScreen();
+		redraw_main_requested = true;
 	}
 
 	if(keysup & KEY_TOUCH)
@@ -3216,7 +3223,7 @@ void VblankHandler(void)
 		lastx = touch.px;
 		lasty = touch.py;
 		if(gui->getActiveScreen() == MAIN_SCREEN)
-			drawMainScreen();
+			redraw_main_requested = true;
 	}
 
 	if(keysheld & mykey_R)
@@ -3291,8 +3298,11 @@ void VblankHandler(void)
 	}
 
 	// Constantly update pattern view while playing
-	if( ( state->playing == true ) && ( (state->recording == false) || ( (state->recording == true) && (frame == 0) ) ) )
+	if(redraw_main_requested)
+	{
+		redraw_main_requested = false;
 		drawMainScreen();
+	}
 
 	frame = (frame + 1) % 2;
 
