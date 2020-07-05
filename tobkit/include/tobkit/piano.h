@@ -4,6 +4,9 @@
 #include <nds.h>
 #include "widget.h"
 
+#define PIANO_WIDTH_TILES 28
+#define PIANO_HEIGHT_TILES 5
+
 class Piano: public Widget {
 	public:
 		Piano(u8 _x, u8 _y, u8 _width, u8 _height, u16 *_char_base, u16 *_screen_base, u16 **_vram);

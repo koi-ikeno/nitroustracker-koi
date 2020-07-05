@@ -8,6 +8,8 @@
 #include "tobkit/piano.map.h"
 #include "tobkit/piano_hit.h"
 
+#define clamp(v, vmin, vmax) (((v) < (vmin)) ? (vmin) : ((v > (vmax)) ? (vmax) : (v)))
+
 u8 halftones[] = {1, 3, 6, 8, 10, 13, 15, 18, 20, 22};
 u8 x_offsets[] = {0, 11, 16, 27, 32, 48, 59, 64, 75, 80, 91, 96};
 
@@ -37,9 +39,9 @@ void Piano::pleaseDraw(void) {
 void Piano::penDown(u8 px, u8 py)
 {
 	// Look up the note in the hit-array
-	u8 kbx, kby;
-	kbx = (px - x)/8;
-	kby = (py - y)/8;
+	s16 kbx, kby;
+	kbx = clamp((px - x)/8, 0, PIANO_WIDTH_TILES - 1);
+	kby = clamp((py - y)/8, 0, PIANO_HEIGHT_TILES - 1);
 	
 	u8 note = piano_hit[kby][kbx];
 	
@@ -55,10 +57,10 @@ void Piano::penDown(u8 px, u8 py)
 void Piano::penMove(u8 px, u8 py)
 {
 	// Look up the note in the hit-array
-	u8 kbx, kby;
-	kbx = (px - x)/8;
-	kby = (py - y)/8;
-	
+	s16 kbx, kby;
+	kbx = clamp((px - x)/8, 0, PIANO_WIDTH_TILES - 1);
+	kby = clamp((py - y)/8, 0, PIANO_HEIGHT_TILES - 1);
+
 	u8 note = piano_hit[kby][kbx];
 	
 	// Only when it moves to another note
@@ -136,9 +138,9 @@ void Piano::draw(void)
 	
 	// Copy the piano to the screen
 	u8 px, py;
-	for(py=0; py<5; ++py)
+	for(py=0; py<PIANO_HEIGHT_TILES; ++py)
 	{
-		for(px=0; px<28; ++px)
+		for(px=0; px<PIANO_WIDTH_TILES; ++px)
 		{
 			map_base[32*(py+y/8)+(px+x/8)] = piano_Map[29*py+px+1];
 		}
@@ -161,11 +163,11 @@ void Piano::setKeyPal(u8 note)
     pal_idx = 1;
   }
 
-  for(px=0; px<28; ++px)
+  for(px=0; px<PIANO_WIDTH_TILES; ++px)
   {
     if(piano_hit[hit_row][px] == note)
 	{
-      for(py=0; py<5; ++py)
+      for(py=0; py<PIANO_HEIGHT_TILES; ++py)
 	  {
       	map_base[32*(py+y/8)+(px+x/8)] &= ~(3 << 12); // Clear bits 12 and 13 (from the left)
         map_base[32*(py+y/8)+(px+x/8)] |= (pal_idx << 12); // Write the pal index to bits 12 and 13
@@ -188,8 +190,8 @@ u8 Piano::isHalfTone(u8 note)
 void Piano::resetPals(void)
 {
   u8 px,py;
-  for(px=0; px<28; ++px) {
-    for(py=0; py<5; ++py) {
+  for(px=0; px<PIANO_WIDTH_TILES; ++px) {
+    for(py=0; py<PIANO_HEIGHT_TILES; ++py) {
       map_base[32*(py+y/8)+(px+x/8)] &= ~(3 << 12); // Clear bits 12 and 13 (from the left)
     }
   }
