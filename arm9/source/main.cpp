@@ -121,6 +121,7 @@ u8 frame = 0;
 u8 active_buffer = FRONT_BUFFER;
 
 u16 *main_vram_front, *main_vram_back, *sub_vram;
+char *launch_path = NULL;
 
 bool typewriter_active = false;
 bool exit_requested = false;
@@ -205,6 +206,7 @@ GUI *gui;
 	GroupBox *gbhandedness, *gbdsmw;
 	CheckBox *cbdsmwsend, *cbdsmwrecv;
 	Button *btndsmwtoggleconnect;
+	Button *btnconfigsave;
 // </Settings Gui>
 
 // <Main Screen>
@@ -246,7 +248,7 @@ void HandleTick(void);
 void handlePotPosChangeFromSong(u16 newpotpos);
 void drawMainScreen(void);
 void redrawSubScreen(void);
-void showMessage(const char *msg);
+void showMessage(const char *msg, bool error);
 void deleteMessageBox(void);
 void stopPlay(void);
 
@@ -714,7 +716,7 @@ void handleLoad(void)
 
 		if(err)
 		{
-			showMessage(xm_transport.getError(err));
+			showMessage(xm_transport.getError(err), true);
 			PrintFreeMem();
 		}
 
@@ -724,7 +726,7 @@ void handleLoad(void)
 		bool success = loadSample(file->name_with_path.c_str());
 
 		if(success == false) {
-			showMessage("wav loading failed");
+			showMessage("wav loading failed", true);
 		}
 	}
 
@@ -770,7 +772,7 @@ void saveFile(void)
 
 	if(err > 0)
 	{
-		showMessage(xm_transport.getError(err));
+		showMessage(xm_transport.getError(err), true);
 	}
 }
 
@@ -785,7 +787,7 @@ void handleSave(void)
 	// sporadic filename sanity check
 	char *filename = labelFilename->getCaption();
 	if(strlen(filename)==0) {
-		showMessage("No filename, stupid!");
+		showMessage("No filename!", true);
 		return;
 	}
 
@@ -794,13 +796,13 @@ void handleSave(void)
 		Instrument *inst = song->getInstrument(state->instrument);
 		if(inst == NULL)
 		{
-			showMessage("Empty instrument!");
+			showMessage("Empty instrument!", true);
 			return;
 		}
 		Sample *smp = inst->getSample((state->sample));
 		if(smp == NULL)
 		{
-			showMessage("Empty sample!");
+			showMessage("Empty sample!", true);
 			return;
 		}
 	}
@@ -1786,7 +1788,7 @@ void handleRecordSample(void)
 	void *testbuf = malloc(RECORDBOX_SOUNDDATA_SIZE * 2);
 	if(testbuf == 0)
 	{
-		showMessage("not enough ram free!");
+		showMessage("not enough ram free!", true);
 		return;
 	}
 
@@ -1989,9 +1991,9 @@ void showExitBox(void)
 	mb->pleaseDraw();
 }
 
-void showMessage(const char *msg)
+void showMessage(const char *msg, bool error)
 {
-	mb = new MessageBox(&sub_vram, msg, 1, "doh!", deleteMessageBox);
+	mb = new MessageBox(&sub_vram, msg, 1, error ? "doh!" : "yay!", deleteMessageBox);
 	gui->registerOverlayWidget(mb, 0, SUB_SCREEN);
 	mb->reveal();
 }
@@ -2328,7 +2330,7 @@ void dsmiConnect(void)
 	deleteMessageBox();
 
 	if(res == 0) {
-		showMessage("Sorry, couldn't connect.");
+		showMessage("Sorry, couldn't connect.", true);
 		state->dsmi_connected = false;
 	} else {
 		iprintf("YAY, connected!\n");
@@ -2373,6 +2375,12 @@ void handleDsmiRecvToggled(bool is_active)
 	state->dsmi_recv = is_active;
 }
 #endif
+
+void saveConfig(void)
+{
+	if (settings->writeIfChanged())
+		showMessage("config saved!", false);
+}
 
 void toggleMapSamples(bool is_active)
 {
@@ -2493,7 +2501,7 @@ void sampleDrawToggle(bool on)
 	sampledisplay->setDrawMode(on);
 }
 
-void setupGUI(int argc, char **argv)
+void setupGUI(void)
 {
 	gui = new GUI();
 	gui->setTheme(settings->getTheme(), settings->getTheme()->col_dark_bg);
@@ -2530,15 +2538,6 @@ void setupGUI(int argc, char **argv)
 		fileselector->selectFilter("song");
 		fileselector->registerFileSelectCallback(handleFileChange);
 		fileselector->registerDirChangeCallback(handleDirChange);
-
-	// check argv to set working directory
-	if (argc >= 1 && argv != NULL && argv[0] != NULL) {
-		char *path_split = strrchr(argv[0], '/');
-		if (path_split != NULL && (path_split - argv[0]) >= 1) {
-			std::string dir(argv[0]);
-			fileselector->setDir(dir.substr(0, path_split - argv[0]));
-		}
-	}
 
 		rbgdiskop = new RadioButton::RadioButtonGroup();
 
@@ -2891,6 +2890,10 @@ void setupGUI(int argc, char **argv)
 		cbdsmwrecv = new CheckBox(7, 97, 40, 14, &sub_vram, true, true);
 		cbdsmwrecv->setCaption("receive");
 
+		btnconfigsave = new Button(97, 135, 40, 14, &sub_vram);
+		btnconfigsave->setCaption("save");
+		btnconfigsave->registerPushCallback(saveConfig);
+
 #ifdef WIFI
 		btndsmwtoggleconnect->registerPushCallback(dsmiToggleConnect);
 		cbdsmwsend->registerToggleCallback(handleDsmiSendToggled);
@@ -2901,6 +2904,7 @@ void setupGUI(int argc, char **argv)
 		tabbox->registerWidget(cbdsmwsend, 0, 4);
 		tabbox->registerWidget(cbdsmwrecv, 0, 4);
 		tabbox->registerWidget(btndsmwtoggleconnect, 0, 4);
+		tabbox->registerWidget(btnconfigsave, 0, 4);
 		tabbox->registerWidget(gbhandedness, 0, 4);
 		tabbox->registerWidget(gbdsmw, 0, 4);
 	// </Settings Gui>
@@ -3499,9 +3503,25 @@ int main(int argc, char **argv) {
     bool fat_success = false;
 #endif
 
+	// parse argv[0], if present
+	if (argc >= 1 && argv != NULL && argv[0] != NULL) {
+		char *path_split = strrchr(argv[0], '/');
+		if (path_split != NULL && (path_split - argv[0]) >= 1) {
+			int launch_path_len = path_split - argv[0];
+			launch_path = (char*) malloc(launch_path_len + 1);
+			strncpy(launch_path, argv[0], launch_path_len);
+			launch_path[launch_path_len] = '\0';
+
+			if (!dirExists(launch_path)) {
+				free(launch_path);
+				launch_path = NULL;
+			}
+		}
+	}
+
 	state = new State();
 
-	settings = new Settings(fat_success);
+	settings = new Settings(launch_path, fat_success);
 
 	clearMainScreen();
 	clearSubScreen();
@@ -3537,7 +3557,7 @@ int main(int argc, char **argv) {
 
 	CommandSetSong(song);
 
-	setupGUI(argc, argv);
+	setupGUI();
 
 	applySettings();
 #ifndef DEBUG
@@ -3546,7 +3566,7 @@ int main(int argc, char **argv) {
 
 #ifdef USE_FAT
 	if(!fat_success)
-		showMessage("dldi init failed");
+		showMessage("dldi init failed", true);
 #endif
 
 #ifdef DEBUG
@@ -3573,6 +3593,8 @@ int main(int argc, char **argv) {
 #endif
 		swiWaitForVBlank();
 	}
+
+	if (launch_path) free(launch_path);
 
 	return 0;
 }

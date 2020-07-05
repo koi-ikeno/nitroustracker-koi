@@ -26,40 +26,44 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <sys/stat.h>
-#include <sys/dir.h>
 
 #include "tools.h"
 
+#define SETTINGS_DEFAULT_DATA_DIR "/data/NitroTracker"
+#define SETTINGS_CONFIG_FILENAME "NitroTracker.conf"
+
 /* ===================== PUBLIC ===================== */
 
-static void dir_create(const char *path) {
-	DIR *dir;
-	if (!(dir = opendir(path))) {
-		mkdir(path, 0777);
-	} else {
-		closedir(dir);
-	}
-}
-
-Settings::Settings(bool use_fat)
+Settings::Settings(char *launch_path, bool use_fat)
 : handedness(RIGHT_HANDED),
 sample_preview(true),
 theme(new Theme()),
-fat(use_fat)
+fat(use_fat), changed(false)
 {
-	memset(songpath, 0, SETTINGS_FILENAME_LEN + 1);
-	memset(samplepath, 0, SETTINGS_FILENAME_LEN + 1);
+	songpath[SETTINGS_FILENAME_LEN] = '\0';
+	samplepath[SETTINGS_FILENAME_LEN] = '\0';
 
-	strncpy(songpath, "/", SETTINGS_FILENAME_LEN);
-	strncpy(samplepath, "/", SETTINGS_FILENAME_LEN);
+	// might never have snprintf called
+	configpath[0] = '\0';
+	configpath[SETTINGS_FILENAME_LEN] = '\0';
+
+	snprintf(songpath, SETTINGS_FILENAME_LEN, "%s/", launch_path != NULL ? launch_path : "");
+	snprintf(samplepath, SETTINGS_FILENAME_LEN, "%s/", launch_path != NULL ? launch_path : "");
 
 	if(fat == true)
 	{
+		if (launch_path == NULL)
+		{
+			dirCreate("/data");
+			dirCreate("/data/NitroTracker");
+		}
+
+		snprintf(configpath, SETTINGS_FILENAME_LEN, "%s/%s",
+			launch_path != NULL ? launch_path : SETTINGS_DEFAULT_DATA_DIR,
+			SETTINGS_CONFIG_FILENAME);
+
 		// Check if the config file exists and, if not, create it
-		dir_create("/data");
-		dir_create("/data/NitroTracker");
-		FILE *conf = fopen("/data/NitroTracker/NitroTracker.conf", "r");
+		FILE *conf = fopen(configpath, "r");
 		if(conf == NULL)
 		{
 			write();
@@ -68,42 +72,21 @@ fat(use_fat)
 		{
 			char hstring[20], prevstring[20];
 
-			char *confstr = (char*)calloc(1, 10240);
-			fread(confstr, 10240, 1, conf);
+			fseek(conf, 0, SEEK_END);
+			u32 conf_filesize = ftell(conf);
+			fseek(conf, 0, SEEK_SET);
+
+			char *confstr = (char*)calloc(1, conf_filesize);
+			fread(confstr, conf_filesize, 1, conf);
 			fclose(conf);
 
-			bool success = getConfigValue(confstr, "Samplepath", samplepath, 255);
-			if(!success)
-			{
-				free(confstr);
-				iprintf("Config file invalid\n");
-				return;
-			}
+			getConfigValue(confstr, "Samplepath", samplepath, SETTINGS_FILENAME_LEN, NULL);
+			getConfigValue(confstr, "Songpath", songpath, SETTINGS_FILENAME_LEN, NULL);
 
-			success = getConfigValue(confstr, "Songpath", songpath, 255);
-			if(!success)
-			{
-				free(confstr);
-				iprintf("Config file invalid\n");
-				return;
-			}
-
-			success = getConfigValue(confstr, "Handedness", hstring, 20);
-			if(!success)
-			{
-				free(confstr);
-				iprintf("Config file invalid\n");
-				return;
-			}
+			getConfigValue(confstr, "Handedness", hstring, 20, "Right");
 			handedness = stringToHandedness(hstring);
 
-			success = getConfigValue(confstr, "Sample Preview", prevstring, 20);
-			if(!success)
-			{
-				free(confstr);
-				iprintf("Config file invalid\n");
-				return;
-			}
+			getConfigValue(confstr, "Sample Preview", prevstring, 20, "True");
 			sample_preview = stringToBool(prevstring);
 
 			free(confstr);
@@ -119,9 +102,7 @@ Handedness Settings::getHandedness(void)
 void Settings::setHandedness(Handedness handedness_)
 {
 	handedness = handedness_;
-    if(fat) {
-    	write();
-    }
+	changed = true;
 }
 
 bool Settings::getSamplePreview(void)
@@ -132,9 +113,7 @@ bool Settings::getSamplePreview(void)
 void Settings::setSamplePreview(bool sample_preview_)
 {
 	sample_preview =  sample_preview_;
-    if(fat) {
-    	write();
-    }
+	changed = true;
 }
 
 Theme *Settings::getTheme(void)
@@ -145,14 +124,12 @@ Theme *Settings::getTheme(void)
 void Settings::setTheme(Theme *theme_)
 {
 	theme = theme_;
-    if(fat) {
-    	write();
-    }
+	changed = true;
 }
 
 char *Settings::getSongPath(void)
 {
-    if(!opendir(songpath)) {
+    if(!dirExists(songpath)) {
         strncpy(songpath, "/", SETTINGS_FILENAME_LEN);
     }
     return songpath;
@@ -162,14 +139,12 @@ void Settings::setSongPath(const char* songpath_)
 {
 	strncpy(songpath, songpath_, SETTINGS_FILENAME_LEN);
 	songpath[SETTINGS_FILENAME_LEN] = '\0';
-    if(fat) {
-    	write();
-    }
+	changed = true;
 }
 
 char *Settings::getSamplePath(void)
 {
-    if(!opendir(samplepath)) {
+    if(!dirExists(samplepath)) {
         strncpy(samplepath, "/", SETTINGS_FILENAME_LEN);
     }
 	return samplepath;
@@ -179,20 +154,29 @@ void Settings::setSamplePath(const char* samplepath_)
 {
 	strncpy(samplepath, samplepath_, SETTINGS_FILENAME_LEN);
 	samplepath[SETTINGS_FILENAME_LEN] = '\0';
-    if(fat) {
-    	write();
-    }
+	changed = true;
+}
+
+bool Settings::writeIfChanged(void)
+{
+	if (!changed)
+		return false;
+	changed = false;
+	return write();
 }
 
 /* ===================== PRIVATE ===================== */
 
-void Settings::write(void)
+bool Settings::write(void)
 {
-	FILE *conf = fopen("/data/NitroTracker/NitroTracker.conf", "w");
+	if (strlen(configpath) <= 0)
+		return false;
+
+	FILE *conf = fopen(configpath, "w");
 	if(conf == NULL)
 	{
-		printf("Error opening config for writing!\n");
-		return;
+		iprintf("error opening config for writing\n");
+		return false;
 	}
 
 	char hstring[20], prevstring[20];
@@ -200,8 +184,8 @@ void Settings::write(void)
 	boolToString(sample_preview, prevstring);
 	fprintf(conf, "Samplepath = %s\nSongpath = %s\nHandedness = %s\nSample Preview = %s\n",
 			samplepath, songpath, hstring, prevstring);
-
 	fclose(conf);
+	return true;
 }
 
 void Settings::handednessToString(char *str)
@@ -236,7 +220,17 @@ bool Settings::stringToBool(char *str)
 		return false;
 }
 
-bool Settings::getConfigValue(char *config, const char *attribute, char *value, size_t maxlen)
+static bool setDefaultConfigValue(char *value, const char *defvalue, size_t maxlen)
+{
+	if (defvalue != NULL)
+	{
+		strncpy(value, defvalue, maxlen);
+		value[maxlen] = '\0';
+	}
+	return false;
+}
+
+bool Settings::getConfigValue(char *config, const char *attribute, char *value, size_t maxlen, const char *defvalue)
 {
 	// Oh goodness, this is going to be some badass C code
 	char *attrptr = 0;
@@ -246,12 +240,12 @@ bool Settings::getConfigValue(char *config, const char *attribute, char *value, 
 	// Find the attribute string
 	attrptr = strstr(config, attribute);
 	if(attrptr == NULL)
-		return false;
+		return setDefaultConfigValue(value, defvalue, maxlen);
 
 	// Find the '=' sign after that
 	valstart = strchr(attrptr, '=');
 	if(valstart == NULL)
-		return false;
+		return setDefaultConfigValue(value, defvalue, maxlen);
 
 	// Skip forward to the next non-space character
 	valstart++;
@@ -261,7 +255,7 @@ bool Settings::getConfigValue(char *config, const char *attribute, char *value, 
 	// Find the end of the line
 	valend = strchr(attrptr, '\n');
 	if(valend == NULL)
-		return false;
+		return setDefaultConfigValue(value, defvalue, maxlen);
 
 	// Skip backward to the last non-space character
 	valend--;

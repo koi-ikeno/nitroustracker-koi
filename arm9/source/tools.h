@@ -39,6 +39,8 @@
 
 void lowercase(char *str);
 void dbgWaitButton(void);
+bool dirExists(const char *dir);
+void dirCreate(const char *dir);
 
 void PrintFreeMem(void);
 void printMallInfo(void);

@@ -29,7 +29,9 @@
 #include <string.h>
 #include <malloc.h>
 #include <nds.h>
+#include <sys/stat.h>
 #include <sys/statvfs.h>
+#include <sys/dir.h>
 
 #ifdef ARM9
 
@@ -48,6 +50,22 @@ void dbgWaitButton(void)
 	iprintf("press the any key...\n");
 	scanKeys();
 	while(! (keysDown()&KEY_A) ) scanKeys();
+}
+
+bool dirExists(const char *path) {
+	DIR *dir;
+	if (!(dir = opendir(path))) {
+		return false;
+	} else {
+		closedir(dir);
+		return true;
+	}
+}
+
+void dirCreate(const char *path) {
+	if (!dirExists(path)) {
+		mkdir(path, 0777);
+	}
 }
 
 /* https://devkitpro.org/viewtopic.php?f=6&t=3057 */

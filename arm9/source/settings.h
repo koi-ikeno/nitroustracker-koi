@@ -37,7 +37,7 @@ enum Handedness {LEFT_HANDED, RIGHT_HANDED};
 
 class Settings {
 	public:
-		Settings(bool use_fat=true);
+		Settings(char *launch_path=NULL, bool use_fat=true);
 		void read(void);
 
 		Handedness getHandedness(void);
@@ -55,8 +55,10 @@ class Settings {
 		char *getSamplePath(void);
 		void setSamplePath(const char* samplepath_);
 
+		bool writeIfChanged(void);
+
 	private:
-		void write(void);
+		bool write(void);
 
 		void handednessToString(char *str);
 		Handedness stringToHandedness(char *str);
@@ -64,14 +66,15 @@ class Settings {
 		void boolToString(bool b, char *str);
 		bool stringToBool(char *str);
 
-		bool getConfigValue(char *config, const char *attribute, char *value, size_t maxlen);
+		bool getConfigValue(char *config, const char *attribute, char *value, size_t maxlen, const char *defvalue);
 
 		Handedness handedness;
 		bool sample_preview;
 		Theme *theme;
+		char configpath[SETTINGS_FILENAME_LEN + 1];
 		char songpath[SETTINGS_FILENAME_LEN + 1];
 		char samplepath[SETTINGS_FILENAME_LEN + 1];
-        bool fat;
+        bool fat, changed;
 };
 
 #endif
