@@ -1979,6 +1979,16 @@ void requestExit(void)
 	exit_requested = true;
 }
 
+void showExitBox(void)
+{
+	if (mb != 0) deleteMessageBox();
+
+	mb = new MessageBox(&sub_vram, "really exit", 2, "yes", requestExit, "no", deleteMessageBox);
+	gui->registerOverlayWidget(mb, 0, SUB_SCREEN);
+	mb->reveal();
+	mb->pleaseDraw();
+}
+
 void showMessage(const char *msg)
 {
 	mb = new MessageBox(&sub_vram, msg, 1, "doh!", deleteMessageBox);
@@ -1990,7 +2000,7 @@ void showAboutBox(void)
 {
 	char msg[256];
 	snprintf(msg, 256, "unofficial : %s", __DATE__);
-	mb = new MessageBox(&sub_vram, msg, 1, "track on!", deleteMessageBox);
+	mb = new MessageBox(&sub_vram, msg, 2, "track on!", deleteMessageBox, "exit", showExitBox);
 	gui->registerOverlayWidget(mb, 0, SUB_SCREEN);
 	mb->reveal();
 }
@@ -3235,14 +3245,6 @@ void VblankHandler(void)
 		}*/
 	}
 
-	if( (keysheld & KEY_START) && (keysheld & KEY_SELECT) && (mb == 0) )
-	{
-		mb = new MessageBox(&sub_vram, "really exit", 2, "yes", requestExit, "no", deleteMessageBox);
-		gui->registerOverlayWidget(mb, 0, SUB_SCREEN);
-		mb->reveal();
-		mb->pleaseDraw();
-	}
-	
 	if(keysup)
 	{
 		gui->buttonRelease(keysup);
