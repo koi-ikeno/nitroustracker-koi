@@ -105,7 +105,8 @@
   extern const uint8 name##_end[]; \
   extern const uint32 name##_size
 
-#define REPEAT_FREQ	10
+#define REPEAT_FREQ	10 /* Hz */
+#define REPEAT_START_DELAY 15 /* frames */
 
 #define FRONT_BUFFER	0
 #define BACK_BUFFER	1
@@ -1496,30 +1497,6 @@ void handleSamplePreviewToggled(bool on)
 {
 	settings->setSamplePreview(on);
 }
-
-void keyRepeatTimerHandler(void)
-{
-	repeatkeys_last = repeatkeys;
-	u16 keysheld = keysHeld();
-	repeatkeys = keysheld & keys_that_are_repeated;
-	u16 actual_repeatkeys = repeatkeys_last & repeatkeys;
-
-	if(actual_repeatkeys) {
-		gui->buttonPress(actual_repeatkeys);
-		handleButtons(actual_repeatkeys, keysheld);
-		if (redraw_main_requested)
-		{
-			redraw_main_requested = false;
-			drawMainScreen();
-		}
-	}
-
-	if(!repeatkeys) {
-		// Turn the timer off if no keys are held
-		TIMER1_CR = 0;
-    }
-}
-
 
 void handleFileChange(File file)
 {
@@ -3199,7 +3176,7 @@ void VblankHandler(void)
 {
 	// Check input
 	scanKeys();
-	u16 keysdown = keysDown();
+	u16 keysdown = keysDown() | (keysDownRepeat() & keys_that_are_repeated);
 	u16 keysup = keysUp();
 	u16 keysheld = keysHeld();
 	touchRead(&touch);
@@ -3247,10 +3224,6 @@ void VblankHandler(void)
 		gui->buttonPress(keysdown);
 		handleButtons(keysdown, keysheld);
 		pv->pleaseDraw();
-
-		// Key repeat handling: enable repeat timer
-		TIMER1_DATA = TIMER_FREQ(REPEAT_FREQ*256);
-		TIMER1_CR = TIMER_ENABLE | TIMER_DIV_256 | TIMER_IRQ_REQ;
 
 		/*
 		// TODO: Better standby mode.
@@ -3546,6 +3519,9 @@ int main(int argc, char **argv) {
 	debugger_init();
 #endif
 
+	// Key repeat handling: enable repeat
+	keysSetRepeat(REPEAT_START_DELAY, 60 / REPEAT_FREQ);
+
 	// Init interprocessor communication
 	CommandInit();
 	RegisterRowCallback(handleNewRow);
@@ -3565,8 +3541,6 @@ int main(int argc, char **argv) {
 #ifndef DEBUG
 	fadeIn();
 #endif
-	irqSet(IRQ_TIMER1, keyRepeatTimerHandler);
-	irqEnable(IRQ_TIMER1);
 
 #ifdef USE_FAT
 	if(!fat_success)
