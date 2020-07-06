@@ -23,30 +23,24 @@
 from PIL import Image
 import struct, sys
 
-space_width = 3
-font_width = 8
-font_height = 11
+bits = {}
 
-assert font_width == 8
 im = Image.open(sys.argv[1]).convert("RGBA")
-char_count = int(im.width / font_width)
-char_widths = {}
+bit_count = im.width * im.height
+byte_count = int((bit_count + 7) / 8)
 
-print("Building %dx%d font of %d characters" % (font_width, font_height, char_count))
+print("Converting %dx%d image to %d bits (%d bytes)" % (im.width, im.height, bit_count, byte_count))
+
+for iy in range(0, im.height):
+	for ix in range(0, im.width):
+		pxl = im.getpixel((ix, iy))
+		bits[im.width*iy + ix] = (pxl[0] < 128)
 
 with open(sys.argv[2], "wb") as fp:
-	for char_id in range(0, char_count):
-		char_widths[char_id] = 0
-		for iy in range(0, font_height):
-			v = 0
-			for ix in range(0, font_width):
-				pxl = im.getpixel((ix + (char_id * font_width), iy))
-				if pxl[0] < 128:
-					v = v | (1 << ix)
-					if (ix + 1) > char_widths[char_id]:
-						char_widths[char_id] = ix + 1
-			fp.write(struct.pack("<B", v))
-		if char_widths[char_id] == 0:
-			char_widths[char_id] = space_width
-
-print("unsigned char charwidths_%dx%d[] = {%s};" % (font_width, font_height, ",".join(str(char_widths[i]) for i in range(0, char_count))));
+	for i in range(0, byte_count):
+		v = 0
+		for ib in range(0, 8):
+			idx = i * 8 + ib
+			if idx in bits and bits[idx] == True:
+				v = v | (1 << ib)
+		fp.write(struct.pack("<B", v))

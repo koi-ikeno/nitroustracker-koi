@@ -23,6 +23,8 @@ endif
 SOURCES		:=	source
 DATA		:=	data
 INCLUDES	:=	include
+FONTS		:=	fonts
+BITMAPS		:=	bitmaps
 
 #---------------------------------------------------------------------------------
 # options for code generation
@@ -60,8 +62,12 @@ else
 export OUTPUT	:=	$(CURDIR)/lib/lib$(TARGET).a
 endif
 
+export TOOLSDIR	:=	$(CURDIR)/../tools
+
 export VPATH	:=	$(foreach dir,$(SOURCES),$(CURDIR)/$(dir)) \
-			$(foreach dir,$(DATA),$(CURDIR)/$(dir))
+			$(foreach dir,$(DATA),$(CURDIR)/$(dir)) \
+			$(foreach dir,$(FONTS),$(CURDIR)/$(dir)) \
+			$(foreach dir,$(BITMAPS),$(CURDIR)/$(dir))
 
 export DEPSDIR	:=	$(CURDIR)/$(BUILD)
 
@@ -69,6 +75,8 @@ CFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
 CPPFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.cpp)))
 SFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
 BINFILES	:=	$(foreach dir,$(DATA),$(notdir $(wildcard $(dir)/*.*)))
+IMGFILES	:=	$(foreach dir,$(FONTS),$(notdir $(wildcard $(dir)/*.*))) \
+			$(foreach dir,$(BITMAPS),$(notdir $(wildcard $(dir)/*.*)))
 
 #---------------------------------------------------------------------------------
 # use CXX for linking C++ projects, CC for standard C
@@ -84,7 +92,7 @@ else
 endif
 #---------------------------------------------------------------------------------
 
-export OFILES	:=	$(addsuffix .o,$(BINFILES)) \
+export OFILES	:=	$(addsuffix .o,$(BINFILES)) $(IMGFILES:.png=.raw.o) \
 			$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o)
 
 export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
@@ -132,6 +140,14 @@ $(OUTPUT)	:	$(OFILES)
 %.raw.o :	%.raw
 	@echo $(notdir $<)
 	@$(bin2o)
+
+font_8x11.raw :		font_8x11.png
+	@echo $(notdir $<)
+	@python3 $(TOOLSDIR)/font_pack.py $< $@
+
+%.raw :		%.png
+	@echo $(notdir $<)
+	@python3 $(TOOLSDIR)/icon_pack.py $< $@
 
 -include $(DEPENDS)
 

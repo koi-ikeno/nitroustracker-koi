@@ -40,7 +40,7 @@ for char_id in range(0, char_count):
 	for iy in range(0, font_height):
 		for ix in range(0, font_width):
 			pxl = im.getpixel((ix + (char_id * (font_width + 1)), iy))
-			bits[font_width*char_count*iy + font_width*char_id + ix] = (pxl[0] > 128)
+			bits[font_width*char_count*iy + font_width*char_id + ix] = (pxl[0] < 128)
 
 with open(sys.argv[2], "wb") as fp:
 	for i in range(0, byte_count):
