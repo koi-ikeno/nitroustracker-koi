@@ -223,6 +223,9 @@ bool CellDeleteAction::revert(Song *song)
 
 // buffer
 
+#define ACTION_BUFFER_INC(i) ((i) + 1) % action_size
+#define ACTION_BUFFER_DEC(i) ((i) == 0) ? (action_size - 1) : ((i) - 1)
+
 void ActionBuffer::clear_at(int i)
 {
     if (actions[i] != NULL)
@@ -233,7 +236,7 @@ void ActionBuffer::clear_at(int i)
 }
 
 ActionBuffer::ActionBuffer(int size)
-    :action_size(size)
+    :on_change([]{}), action_size(size)
 {
     actions = (Action**) malloc(sizeof(Action*) * action_size);
     memset(actions, 0, sizeof(Action*) * action_size);
@@ -257,6 +260,9 @@ void ActionBuffer::clear()
 
     a_head = 0;
     a_tail = 0;
+    a_pos = 0;
+
+    on_change();
 }
 
 bool ActionBuffer::add(Song *song, Action *action)
@@ -267,9 +273,21 @@ bool ActionBuffer::add(Song *song, Action *action)
 
     if (res)
     {
-        clear_at(a_tail);
+        // delete everything between a_pos and a_tail
+        for (int i = a_pos; i != a_tail; i = ACTION_BUFFER_INC(i))
+            clear_at(i);
+        a_tail = a_pos;
+        // check for full buffer
+        if (a_head == a_tail && actions[a_tail] != NULL)
+        {
+            clear_at(a_head);
+            a_head = ACTION_BUFFER_INC(a_head);
+        }
+        // apply action
         actions[a_tail] = action;
-        a_tail = (a_tail + 1) % action_size;
+        a_tail = ACTION_BUFFER_INC(a_tail);
+        a_pos = a_tail;
+        on_change();
     #ifdef DEBUG
         iprintf("undo push => %d\n", queue_length());
     #endif
@@ -289,20 +307,17 @@ bool ActionBuffer::add(Song *song, Action *action)
 
 bool ActionBuffer::undo(Song *song)
 {
-    if (a_head == a_tail) return false;
+    if (!can_undo()) return false;
 
-    int a_pos = a_tail == 0 ? (action_size - 1) : (a_tail - 1);
-    sassert(actions[a_pos] != NULL, "action is null! (%d %d)", a_head, a_tail);
+    int undo_pos = ACTION_BUFFER_DEC(a_pos);
+    sassert(actions[undo_pos] != NULL, "action is null! (%d %d)", a_head, a_tail);
 
-    bool res = actions[a_pos]->revert(song);
+    bool res = actions[undo_pos]->revert(song);
     if (res)
     {
         // undo successful, descend
-        clear_at(a_pos);
-        a_tail = a_pos;
-#ifdef DEBUG
-        iprintf("undo pop => %d\n", queue_length());
-#endif
+        a_pos = undo_pos;
+        on_change();
         return true;
     }
     else
@@ -316,6 +331,42 @@ bool ActionBuffer::undo(Song *song)
     }
 }
 
+bool ActionBuffer::redo(Song *song)
+{
+    if (!can_redo()) return false;
+
+    int redo_pos = a_pos;
+    sassert(actions[redo_pos] != NULL, "action is null! (%d %d)", a_head, a_tail);
+
+    bool res = actions[redo_pos]->apply(song);
+    if (res)
+    {
+        // redo successful, ascend
+        a_pos = ACTION_BUFFER_INC(a_pos);
+        on_change();
+        return true;
+    }
+    else
+    {
+        // undo failed, clear all
+#ifdef DEBUG
+        iprintf("redo buffer trashed!\n");
+#endif
+        clear();
+        return false;
+    }
+}
+
+bool ActionBuffer::can_undo()
+{
+    return queue_length() > 0 && a_pos != a_head;
+}
+
+bool ActionBuffer::can_redo()
+{
+    return queue_length() > 0 && a_pos != a_tail;
+}
+
 int ActionBuffer::queue_length()
 {
     int x = a_tail - a_head;
@@ -325,4 +376,8 @@ int ActionBuffer::queue_length()
 int ActionBuffer::size()
 {
     return action_size;
+}
+
+void ActionBuffer::register_change_callback(std::function<void(void)> func) {
+    on_change = func;
 }

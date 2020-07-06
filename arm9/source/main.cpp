@@ -215,7 +215,7 @@ GUI *gui;
 	Button *buttonins, *buttondel, *buttonstopnote2, *buttoncolselect, *buttonemptynote2, *buttonunmuteall;
 	BitButton *buttonswitchmain;
 	Button *buttoncut, *buttoncopy, *buttonpaste, *buttonsetnotevol;
-	Button *buttonundo;
+	Button *buttonundo, *buttonredo;
 	PatternView *pv;
 	NumberSlider *nsnotevolume;
 	Label *labelmute, *labelnotevol;
@@ -984,13 +984,22 @@ void stopNoteStroke(void) {
 	redraw_main_requested = true;
 }
 
-void undoOp(void) {
-	action_buffer->undo(song);
-	if (action_buffer->queue_length() <= 0)
-		buttonundo->hide();
-	redraw_main_requested = true;
+static void actionBufferChangeCallback(void) {
+	bool changed = false;
+	changed |= buttonundo->set_enabled(action_buffer->can_undo());
+	changed |= buttonredo->set_enabled(action_buffer->can_redo());
+	if (changed) {
+		redraw_main_requested = true;
+	}
 }
 
+void undoOp(void) {
+	action_buffer->undo(song);
+}
+
+void redoOp(void) {
+	action_buffer->redo(song);
+}
 
 void delNote(void) // Delete a cell and move the cells below it up
 {
@@ -2920,7 +2929,8 @@ void setupGUI(void)
 	buttonpause        = new BitButton(180, 4  , 23, 15, &sub_vram, icon_pause_raw, 12, 12, 5, 0, false);
 	buttonstop         = new BitButton(204, 4  , 23, 15, &sub_vram, icon_stop_raw, 12, 12, 5, 0);
 
-	buttonundo         = new Button(225, 127, 30, 12, &sub_vram, false);
+	buttonundo         = new Button(225, 127, 15, 12, &sub_vram);
+	buttonredo         = new Button(225 + 15, 127, 15, 12, &sub_vram);
 	buttoninsnote2     = new Button(225, 140, 30, 12, &sub_vram);
 	buttondelnote2     = new Button(225, 153, 30, 12, &sub_vram);
 	buttonemptynote    = new Button(225, 166, 30, 12, &sub_vram);
@@ -2930,8 +2940,10 @@ void setupGUI(void)
 
 	tbmultisample      = new ToggleButton(165, 21, 10, 10, &sub_vram);
 
-	buttonundo->setCaption("undo");
+	buttonundo->setCaption("un");
 	buttonundo->registerPushCallback(undoOp);
+	buttonredo->setCaption("re");
+	buttonredo->registerPushCallback(redoOp);
 
 	cbloop = new CheckBox(178, 19, 30, 12, &sub_vram, true, false, true);
 
@@ -3059,6 +3071,7 @@ void setupGUI(void)
 	gui->registerWidget(buttonpause, 0, SUB_SCREEN);
 	gui->registerWidget(buttonemptynote, 0, SUB_SCREEN);
 	gui->registerWidget(buttonundo, 0, SUB_SCREEN);
+	gui->registerWidget(buttonredo, 0, SUB_SCREEN);
 	gui->registerWidget(buttoninsnote2, 0, SUB_SCREEN);
 	gui->registerWidget(buttondelnote2, 0, SUB_SCREEN);
 	gui->registerWidget(buttonrenameinst, 0, SUB_SCREEN);
@@ -3080,6 +3093,7 @@ void setupGUI(void)
 	gui->revealAll();
 
 
+	actionBufferChangeCallback();
 	updateTempoAndBpm();
 
 
@@ -3264,9 +3278,11 @@ void VblankHandler(void)
 			fastscroll = false;
 	}
 
-	// TODO: move to ->insert
-	if (action_buffer->queue_length() > 0)
+	// TODO: move to ->add
+	if (action_buffer->can_undo())
 		buttonundo->show();
+	if (action_buffer->can_redo())
+		buttonredo->show();
 
 	// Easy Piano pak handling logic
 	if (pianoIsInserted())
@@ -3570,6 +3586,7 @@ int main(int argc, char **argv) {
 	CommandSetSong(song);
 
 	setupGUI();
+	action_buffer->register_change_callback(actionBufferChangeCallback);
 
 	applySettings();
 #ifndef DEBUG

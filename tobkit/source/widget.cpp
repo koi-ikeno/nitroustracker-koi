@@ -92,6 +92,29 @@ void Widget::disable(void)
 	}
 }
 
+// Boolean wrappers
+
+bool Widget::set_visible(bool value)
+{
+	bool changed = value != visible;
+	if (value) show(); else hide();
+	return changed;
+}
+
+bool Widget::set_occluded(bool value)
+{
+	bool changed = value != occluded;
+	if (value) occlude(); else reveal();
+	return changed;
+}
+
+bool Widget::set_enabled(bool value)
+{
+	bool changed = value != enabled;
+	if (value) enable(); else disable();
+	return changed;
+}
+
 /* ===================== PROTECTED ===================== */
 
 static inline u8 getCharIdx(char c)

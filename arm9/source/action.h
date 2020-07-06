@@ -96,14 +96,22 @@ class ActionBuffer {
         bool add(Song *song, Action *action);
 
         bool undo(Song *song);
+        bool redo(Song *song);
 
+        bool can_undo();
+        bool can_redo();
         int queue_length();
         int size();
 
+        void register_change_callback(std::function<void(void)> func);
 	private:
         void clear_at(int i);
 
-        int action_size, a_head, a_tail;
+        std::function<void(void)> on_change;
+        int action_size;
+        int a_head; // first entry in circular buffer
+        int a_tail; // last entry in circular buffer
+        int a_pos; // current entry in circular buffer
 		Action **actions;
 };
 

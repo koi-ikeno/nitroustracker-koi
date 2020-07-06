@@ -36,10 +36,12 @@ class Widget {
 		virtual void show(void);
 		virtual void hide(void);
 		bool is_visible(void) { return visible; }
+		bool set_visible(bool value);
 
 		virtual void occlude(void);
 		virtual void reveal(void);
 		bool is_occluded(void) { return occluded; }
+		bool set_occluded(bool value);
 
 		// Resize
 		void resize(u16 w, u16 h);
@@ -48,6 +50,7 @@ class Widget {
 		virtual void enable(void);
 		virtual void disable(void);
 		bool is_enabled(void) { return enabled; }
+		bool set_enabled(bool value);
 
 		// Event calls
 		virtual void penDown(u8 px, u8 py) {};
