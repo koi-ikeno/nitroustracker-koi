@@ -310,6 +310,17 @@ void Widget::drawMonochromeIcon(u8 tx, u8 ty, u8 tw, u8 th, const u8 *icon, u16 
 	}
 }
 
+void Widget::drawMonochromeIconOffset(u8 tx, u8 ty, u8 tw, u8 th, u8 ix, u8 iy, u8 iw, u8 ih, const u8 *icon, u16 color) {
+	for(u8 j=0;j<th;++j) {
+		u16 pixelidx = ((iy+j) * iw) + ix;
+		for(u8 i=0;i<tw;++i,++pixelidx) {
+			if(icon[pixelidx/8] & BIT(pixelidx%8) ) {
+				*(*vram+SCREEN_WIDTH*(y+ty+j)+x+tx+i) = color;
+			}
+		}
+	}
+}
+
 // Stylus utility functions
 bool Widget::isInRect(u8 x, u8 y, u8 x1, u8 y1, u8 x2, u8 y2)
 {

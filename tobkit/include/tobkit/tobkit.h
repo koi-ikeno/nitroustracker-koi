@@ -8,7 +8,6 @@
 #include <tobkit/fontchars.h>
 #include <tobkit/groupbox.h>
 #include <tobkit/gui.h>
-#include <tobkit/htabbox.h>
 #include <tobkit/piano_hit.h>
 #include <tobkit/piano.h>
 #include <tobkit/piano.map.h>

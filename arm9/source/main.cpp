@@ -174,7 +174,7 @@ GUI *gui;
 	RecordBox *recordbox;
 	NormalizeBox *normalizeBox;
 	SampleDisplay *sampledisplay;
-	HTabBox *sampletabbox;
+	TabBox *sampletabbox;
 
 	Label *labelsamplevolume, *labelrelnote, *labelfinetune, *labelpanning;
 	NumberSlider *nssamplevolume, *nsfinetune, *nspanning;
@@ -2551,13 +2551,13 @@ void setupGUI(void)
 	pixmaplogo = new Pixmap(101, 1, 76, 17, nitrotracker_logo, &sub_vram);
 	pixmaplogo->registerPushCallback(showAboutBox);
 
-	tabbox = new TabBox(1, 1, 139, 151, &sub_vram);
+	tabbox = new TabBox(1, 1, 139, 151, &sub_vram, TABBOX_ORIENTATION_TOP, 16);
 	tabbox->setTheme(settings->getTheme(), settings->getTheme()->col_dark_bg);
-	tabbox->addTab(icon_song_raw);
-	tabbox->addTab(icon_disk_raw);
-	tabbox->addTab(icon_sample_raw);
-	tabbox->addTab(icon_trumpet_raw);
-	tabbox->addTab(icon_wrench_raw);
+	tabbox->addTab(icon_song_raw, 0);
+	tabbox->addTab(icon_disk_raw, 1);
+	tabbox->addTab(icon_sample_raw, 2);
+	tabbox->addTab(icon_trumpet_raw, 3);
+	tabbox->addTab(icon_wrench_raw, 4);
 
 	// <Disk OP GUI>
 		fileselector = new FileSelector(38, 21, 100, 111, &sub_vram);
@@ -2727,12 +2727,12 @@ void setupGUI(void)
 	sampledisplay = new SampleDisplay(4, 23, 131, 70, &sub_vram);
 	sampledisplay->setActive();
 
-	sampletabbox = new HTabBox(3, 94, 132, 55, &sub_vram);
+	sampletabbox = new TabBox(3, 94, 132, 55, &sub_vram, TABBOX_ORIENTATION_LEFT, 11);
 	sampletabbox->setTheme(settings->getTheme(), settings->getTheme()->col_dark_bg);
-	sampletabbox->addTab(sampleedit_wave_icon_raw);
-	sampletabbox->addTab(sampleedit_draw_small_raw);
-	sampletabbox->addTab(sampleedit_control_icon_raw);
-	sampletabbox->addTab(sampleedit_loop_icon_raw);
+	sampletabbox->addTab(sampleedit_wave_icon_raw, 0);
+	sampletabbox->addTab(sampleedit_draw_small_raw, 1);
+	sampletabbox->addTab(sampleedit_control_icon_raw, 2);
+	sampletabbox->addTab(sampleedit_loop_icon_raw, 3);
 
 
 	//sampletabbox->addTab(sampleedit_chip_icon);

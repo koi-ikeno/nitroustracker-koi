@@ -2,15 +2,26 @@
 
 /* ===================== PUBLIC ===================== */
 
-TabBox::TabBox(u8 _x, u8 _y, u8 _width, u8 _height, u16 **_vram, bool _visible)
+TabBox::TabBox(u8 _x, u8 _y, u8 _width, u8 _height, u16 **_vram,
+	u8 _orientation, u8 _icon_size, bool _visible)
 	:Widget(_x, _y, _width, _height, _vram, _visible),
-	currenttab(0)
+	orientation(_orientation), icon_size(_icon_size),
+	currentgui(0)
 {
 	onTabChange = 0;
 }
 
-void TabBox::addTab(const u8 *icon)
+u8 TabBox::findGuiIdx(u8 tabidx)
 {
+	for (u8 i = 0; i < tab_idx_map.size(); i++)
+		if (tab_idx_map.at(i) == tabidx)
+			return i;
+	return 255;
+}
+
+void TabBox::addTab(const u8 *icon, u8 tabidx)
+{
+	tab_idx_map.push_back(tabidx);
 	icons.push_back(icon);
 	GUI gui;
 	gui.setTheme(theme, theme->col_light_bg);
@@ -21,9 +32,12 @@ void TabBox::addTab(const u8 *icon)
 // Touches on widget's area are redirected to the widget
 void TabBox::registerWidget(Widget *w, u16 listeningButtons, u8 tabidx, u8 screen)
 {
-	guis.at(tabidx).registerWidget(w, listeningButtons, screen);
+	u8 guiidx = findGuiIdx(tabidx);
+	if (guiidx >= guis.size()) return;
+
+	guis.at(guiidx).registerWidget(w, listeningButtons, screen);
 	
-	if(tabidx!=currenttab) {
+	if(guiidx!=currentgui) {
 		w->occlude();
 	} else {
 		if(isExposed())
@@ -34,37 +48,49 @@ void TabBox::registerWidget(Widget *w, u16 listeningButtons, u8 tabidx, u8 scree
 // Event calls
 void TabBox::penDown(u8 px, u8 py)
 {
+	u8 size_border = icon_size + 2;
+	u8 size_full = size_border;
+
+	bool on_tab = false;
+	u8 gui_hit = 255;
+
+	if (orientation == TABBOX_ORIENTATION_TOP) {
+		on_tab = (py-y) < size_full;
+		gui_hit = (px-x-3) / size_full;
+	} else if (orientation == TABBOX_ORIENTATION_LEFT) {
+		on_tab = (px-x) < size_full;
+		gui_hit = (py-y-3) / size_full;
+	}
+
 	// If it's on the tabs
-	if(py-y<=18) {
-		u8 tab_hit;
-		tab_hit = (px-x-1)/19;
-		if(tab_hit<guis.size()) {
-			currenttab = tab_hit;
+	if(on_tab) {
+		if(gui_hit<guis.size()) {
+			currentgui = gui_hit;
 			draw();
 			updateVisibilities();
 			if(onTabChange!=0) {
-				onTabChange(currenttab);
+				onTabChange(tab_idx_map.at(gui_hit));
 			}
 		}
 	} else {
 		// If its in the box
-		guis.at(currenttab).penDown(px,py);
+		guis.at(currentgui).penDown(px,py);
 	}
 }
 
 void TabBox::penUp(u8 px, u8 py) {
-	guis.at(currenttab).penUp(px,py);
+	guis.at(currentgui).penUp(px,py);
 }
 
 void TabBox::penMove(u8 px, u8 py) {
 	// If it's on the tabs
 	
 	// If its in the box
-	guis.at(currenttab).penMove(px,py);	
+	guis.at(currentgui).penMove(px,py);	
 }
 
 void TabBox::buttonPress(u16 buttons) {
-	guis.at(currenttab).buttonPress(buttons);
+	guis.at(currentgui).buttonPress(buttons);
 }
 
 // Callback registration
@@ -82,25 +108,25 @@ void TabBox::pleaseDraw(void)
 void TabBox::show(void)
 {
 	Widget::show();
-	guis.at(currenttab).showAll();
+	guis.at(currentgui).showAll();
 }
 
 void TabBox::hide(void)
 {
 	Widget::hide();
-	guis.at(currenttab).hideAll();
+	guis.at(currentgui).hideAll();
 }
 
 void TabBox::occlude(void)
 {
 	Widget::occlude();
-	guis.at(currenttab).occludeAll();
+	guis.at(currentgui).occludeAll();
 }
 
 void TabBox::reveal(void)
 {
 	Widget::reveal();
-	guis.at(currenttab).revealAll();
+	guis.at(currentgui).revealAll();
 }
 
 
@@ -109,9 +135,9 @@ void TabBox::setTheme(Theme *theme_, u16 bgcolor_)
 	theme = theme_;
 	bgcolor = bgcolor_;
 	
-	for(u8 tab_id=0; tab_id<guis.size(); ++tab_id)
+	for(u8 gui_id=0; gui_id<guis.size(); ++gui_id)
 	{
-		guis.at(tab_id).setTheme(theme_, theme->col_light_bg);
+		guis.at(gui_id).setTheme(theme_, theme->col_light_bg);
 	}
 }
 
@@ -119,41 +145,58 @@ void TabBox::setTheme(Theme *theme_, u16 bgcolor_)
 
 void TabBox::draw(void)
 {
-	// Draw box
-	drawFullBox(1, 19, width-2, height-20, theme->col_light_bg);
-	drawBox(0, 18, width, height-18);
-	
-	// Draw tabs
+	u8 size_border = icon_size + 2;
+	u8 size_full = size_border;
 	u16 black = RGB15(0,0,0)|BIT(15);
-	
-	drawFullBox(0, 0, 3+19*guis.size(), 3, theme->col_dark_bg);
-	
-	for(u8 tabidx=0;tabidx<guis.size();++tabidx) {
-		if(tabidx==currenttab) {
-			drawFullBox(3+19*tabidx, 1, 18, 18, theme->col_light_bg);
-			drawLine(2+19*tabidx, 1, 18, 0, black);
-			drawLine(3+19*tabidx, 0, 18, 1, black);
-			drawLine(21+19*tabidx, 1, 18, 0, black);
-			drawMonochromeIcon(4+19*tabidx, 2, 16, 16, icons.at(tabidx));
-		} else {
-			drawFullBox(3+19*tabidx, 3, 18, 15, theme->col_medium_bg);
-			drawLine(2+19*tabidx, 3, 16, 0, black);
-			drawLine(3+19*tabidx, 2, 18, 1, black);
-			drawLine(21+19*tabidx, 3, 16, 0, black);
-			drawMonochromeIcon(4+19*tabidx, 4, 16, 14, icons.at(tabidx));
+
+	if (orientation == TABBOX_ORIENTATION_TOP) {
+		// Draw box
+		drawFullBox(1, size_full, width-2, height-(size_border+2), theme->col_light_bg);
+		drawBox(0, size_border, width, height-size_border);
+		
+		// Draw tabs
+		drawFullBox(0, 0, 3+size_full*guis.size(), 3, theme->col_dark_bg);
+		
+		for(u8 guiidx=0;guiidx<guis.size();++guiidx) {
+			bool selected = guiidx==currentgui;
+			u8 offset = selected ? 3 : 0;
+
+			drawFullBox(3+size_full*guiidx, 1+offset, size_border, size_border-offset, selected ? theme->col_medium_bg : theme->col_light_bg);
+			drawLine(2+size_full*guiidx, 1+offset, size_border-offset, 0, black);
+			drawLine(3+size_full*guiidx, 0+offset, size_border, 1, black);
+			drawLine(2+size_full*(guiidx+1), 1+offset, size_border-offset, 0, black);
+			drawMonochromeIcon(4+size_full*guiidx, 2+offset, icon_size, icon_size - offset, icons.at(guiidx));
+		}
+	} else {
+		// Draw box
+		drawFullBox(14, 1, width-15, height-2, theme->col_light_bg);
+		drawBox(13, 0, width-13, height);
+
+		// Draw tabs
+		drawFullBox(0, 0, 3, 3+13*guis.size(), theme->col_light_bg);
+
+		for(u8 guiidx=0;guiidx<guis.size();++guiidx) {
+			bool selected = guiidx==currentgui;
+			u8 offset = selected ? 3 : 0;
+
+			drawFullBox(1+offset, 2+size_full*guiidx, size_border-offset, size_border, selected ? theme->col_medium_bg : theme->col_light_bg);
+			drawLine(1+offset, 2+size_full*guiidx, size_border-offset, 1, black);
+			drawLine(0+offset, 3+size_full*guiidx, size_border - 1, 0, black);
+			drawLine(1+offset, 2+size_full*(guiidx+1), size_border-offset, 1, black);
+			drawMonochromeIconOffset(2+offset, 4+size_full*guiidx, icon_size - offset, icon_size, 0, 0, icon_size, icon_size, icons.at(guiidx));
 		}
 	}
 	
 	// Draw gui
-	guis.at(currenttab).draw();
+	guis.at(currentgui).draw();
 }
 
 void TabBox::updateVisibilities(void)
 {
-	for(u8 tab_id=0; tab_id<guis.size(); ++tab_id) {
-		if(tab_id != currenttab) {
-			guis.at(tab_id).occludeAll();
+	for(u8 gui_id=0; gui_id<guis.size(); ++gui_id) {
+		if(gui_id != currentgui) {
+			guis.at(gui_id).occludeAll();
 		}
 	}
-	guis.at(currenttab).revealAll();
+	guis.at(currentgui).revealAll();
 }

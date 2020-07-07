@@ -6,11 +6,14 @@
 
 #include <vector>
 
+#define TABBOX_ORIENTATION_TOP 0
+#define TABBOX_ORIENTATION_LEFT 1
+
 class TabBox: public Widget {
 	public:
-		TabBox(u8 _x, u8 _y, u8 _width, u8 _height, u16 **_vram, bool _visible=true);
+		TabBox(u8 _x, u8 _y, u8 _width, u8 _height, u16 **_vram, u8 orientation, u8 icon_size, bool _visible=true);
 		
-		void addTab(const u8 *icon);
+		void addTab(const u8 *icon, u8 tabidx);
 	
 		// Adds a widget and specifies which button it listens to
 		// Touches on widget's area are redirected to the widget
@@ -36,10 +39,14 @@ class TabBox: public Widget {
 		void setTheme(Theme *theme_, u16 bgcolor_);
 		
 	private:
+		u8 findGuiIdx(u8 tabidx);
 		void draw(void);	
 		void updateVisibilities(void);
 	
-		u8 currenttab;
+		u8 orientation;
+		u8 icon_size;
+		u8 currentgui;
+		std::vector<u8> tab_idx_map;
 		std::vector<const u8*> icons;
 		std::vector<GUI> guis;
 	
