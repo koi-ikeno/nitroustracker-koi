@@ -2539,7 +2539,7 @@ void sampleDrawToggle(bool on)
 	sampledisplay->setDrawMode(on);
 }
 
-void setupGUI(void)
+void setupGUI(bool dldi_enabled)
 {
 	gui = new GUI();
 	gui->setTheme(settings->getTheme(), settings->getTheme()->col_dark_bg);
@@ -2554,7 +2554,8 @@ void setupGUI(void)
 	tabbox = new TabBox(1, 1, 139, 151, &sub_vram, TABBOX_ORIENTATION_TOP, 16);
 	tabbox->setTheme(settings->getTheme(), settings->getTheme()->col_dark_bg);
 	tabbox->addTab(icon_song_raw, 0);
-	tabbox->addTab(icon_disk_raw, 1);
+	if (dldi_enabled)
+		tabbox->addTab(icon_disk_raw, 1);
 	tabbox->addTab(icon_sample_raw, 2);
 	tabbox->addTab(icon_trumpet_raw, 3);
 	tabbox->addTab(icon_wrench_raw, 4);
@@ -2617,6 +2618,8 @@ void setupGUI(void)
 		buttonchangefilename->setCaption("...");
 		buttonchangefilename->registerPushCallback(showTypewriterForFilename);
 
+	if (dldi_enabled)
+	{
 		tabbox->registerWidget(fileselector, 0, 1);
 		tabbox->registerWidget(rbsong, 0, 1);
 		tabbox->registerWidget(rbsample, 0, 1);
@@ -2628,6 +2631,7 @@ void setupGUI(void)
 		tabbox->registerWidget(buttonload, 0, 1);
 		tabbox->registerWidget(labelFilename, 0, 1);
 		tabbox->registerWidget(buttonchangefilename, 0, 1);
+	}
 	// </Disk OP GUI>
 
 	// <Song gui>
@@ -3595,7 +3599,7 @@ int main(int argc, char **argv) {
 
 	CommandSetSong(song);
 
-	setupGUI();
+	setupGUI(fat_success);
 
 	applySettings();
 #ifndef DEBUG
