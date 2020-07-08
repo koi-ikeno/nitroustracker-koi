@@ -615,6 +615,9 @@ void setSong(Song *newsong)
 	// Clear sample display
 	sampledisplay->setSample(0);
 
+	// Clear action buffer
+	action_buffer->clear();
+
 	// Update POT
 	lbpot->clear();
 	u8 potentry;
@@ -1260,6 +1263,8 @@ void handlePotDec(void) {
 	if(pattern>0) {
 		pattern--;
 		song->setPotEntry(state->potpos, pattern);
+		// TODO: turn into undo operation
+		action_buffer->clear();
 		// If the current pos was changed, switch the pattern
 		DC_FlushAll();
 
@@ -1287,6 +1292,8 @@ void handlePotInc(void)
 		}
 
 		song->setPotEntry(state->potpos, pattern);
+		// TODO: turn into undo operation
+		action_buffer->clear();
 		DC_FlushAll();
 
 		redraw_main_requested = true;
@@ -1305,6 +1312,8 @@ void handlePotInc(void)
 void handlePotIns(void)
 {
 	song->potIns(state->potpos, song->getPotEntry(state->potpos));
+	// TODO: turn into undo operation
+	action_buffer->clear();
 	DC_FlushAll();
 	lbpot->ins(lbpot->getidx(), lbpot->get(lbpot->getidx()));
 	updateLabelSongLen();
@@ -1318,6 +1327,9 @@ void handlePotDel(void)
 	}
 
 	song->potDel(state->potpos);
+
+	// TODO: turn into undo operation
+	action_buffer->clear();
 	DC_FlushAll();
 
 	if(state->potpos>=song->getPotLength()) {
@@ -1352,6 +1364,8 @@ void handlePtnClone(void)
 		}
 	}
 
+	// TODO: turn into undo operation
+	action_buffer->clear();
 	DC_FlushAll();
 	char numberstr[3] = {0};
 	sprintf(numberstr, "%2x", newidx);
@@ -1362,6 +1376,7 @@ void handlePtnClone(void)
 
 void handleChannelAdd(void)
 {
+	// TODO: turn into undo operation
 	song->channelAdd();
 	redraw_main_requested = true;
 	updateLabelChannels();
@@ -1370,6 +1385,7 @@ void handleChannelAdd(void)
 
 void handleChannelDel(void)
 {
+	// TODO: turn into undo operation
 	song->channelDel();
 
 	// Move back cursor if necessary
@@ -1396,6 +1412,7 @@ void handleChannelDel(void)
 
 void handlePtnLengthChange(s32 newlength)
 {
+	// TODO: turn into undo operation
 	if(newlength != song->getPatternLength(song->getPotEntry(state->potpos)))
 	{
 		song->resizePattern(song->getPotEntry(state->potpos), newlength);
@@ -1410,13 +1427,11 @@ void handlePtnLengthChange(s32 newlength)
 
 
 void handleTempoChange(u8 tempo) {
-
 	song->setTempo(tempo);
 	DC_FlushAll();
 }
 
 void handleBpmChange(s32 bpm) {
-
 	song->setBpm(bpm);
 	DC_FlushAll();
 }
@@ -1434,6 +1449,7 @@ void handleRestartPosChange(s32 restartpos)
 void zapPatterns(void)
 {
 	song->zapPatterns();
+	action_buffer->clear();
 	DC_FlushAll();
 	deleteMessageBox();
 
