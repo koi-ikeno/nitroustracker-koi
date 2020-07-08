@@ -10,11 +10,6 @@
 extern u8 *fake_heap_end;
 extern u8 *fake_heap_start;
 
-static int getUsedMem() {
-	struct mallinfo mi = mallinfo();
-	return mi.uordblks; 
-}
-
 static int getFreeMem() {
 	struct mallinfo mi = mallinfo();
 	return mi.fordblks + (fake_heap_end - (u8*)sbrk(0));
@@ -25,7 +20,7 @@ static int getFreeMem() {
 MemoryIndicator::MemoryIndicator(u8 _x, u8 _y, u8 _width, u8 _height, u16 **_vram, bool _visible)
 	:Widget(_x, _y, _width, _height, _vram, _visible)
 {
-	total_ram = getFreeMem() + getUsedMem(); // only estimate!
+	total_ram = getFreeMem(); // only estimate!
 }
 
 MemoryIndicator::~MemoryIndicator()
@@ -45,20 +40,23 @@ void MemoryIndicator::pleaseDraw(void)
 
 void MemoryIndicator::draw(void)
 {
-	u32 used_ram = getUsedMem();
+	u32 free_ram = getFreeMem();
+	u32 used_ram = total_ram - free_ram;
 	
 	int boxwidth = clamp((width - 2) * used_ram / total_ram, 0, (u32) (width - 2));
 	int percentfull = clamp(100 * used_ram / total_ram, 0, 100);
 	
-	// Color depends on percentage of full ram
+	// Color depends on percentage of used RAM
 	u16 col;
-	if(percentfull < 68)
-		col = COL_INDICATOR_OK; // Green
-	else if(percentfull < 84)
-		col = interpolateColor(COL_INDICATOR_WARNING, COL_INDICATOR_OK, (percentfull - 68) << 8); // Yellow
+	if(percentfull < 62)
+		col = COL_INDICATOR_OK;
+	else if(percentfull < 78)
+		col = interpolateColor(COL_INDICATOR_WARNING, COL_INDICATOR_OK, (percentfull - 62) << 8);
+	else if(percentfull < 94)
+		col = interpolateColor(COL_INDICATOR_ALERT, COL_INDICATOR_WARNING, (percentfull - 78) << 8);
 	else
-		col = interpolateColor(COL_INDICATOR_ALERT, COL_INDICATOR_WARNING, (percentfull - 84) << 8); // Yellow
-	
+		col = COL_INDICATOR_ALERT;
+
 	drawBorder(theme->col_outline);
 	drawFullBox(1, 1, width-2, height-2, theme->col_light_bg);
 	drawFullBox(1, 1, boxwidth, height-2, col);
