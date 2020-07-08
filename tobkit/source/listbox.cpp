@@ -236,7 +236,7 @@ void ListBox::draw(void)
 	u16 i;
 	// Horizontal Separator Lines
 	for(i=0;i<rows_displayed-1;++i) {
-		drawLine(1,ROW_HEIGHT*(i+1),width-SCROLLBAR_WIDTH-1,1,theme->col_sepline);
+		drawHLine(1,ROW_HEIGHT*(i+1),width-SCROLLBAR_WIDTH-1,theme->col_sepline);
 	}
 	
 	// Fill rows
@@ -250,7 +250,7 @@ void ListBox::draw(void)
 
 	// Vertical number separator line
 	if(show_numbers) {
-		drawLine(COUNTER_WIDTH,1,height-2,0,theme->col_sepline);
+		drawVLine(COUNTER_WIDTH,1,height-2,theme->col_sepline);
 	}
 	
 	// Scrollbar

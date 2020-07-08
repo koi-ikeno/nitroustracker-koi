@@ -486,7 +486,7 @@ void SampleDisplay::draw(void)
 
 	u16 colortable[DRAW_HEIGHT+2];
 	for(u8 i=0; i<DRAW_HEIGHT+2; ++i)
-		colortable[i] = interpolateColor(theme->col_light_ctrl, theme->col_dark_ctrl, i);
+		colortable[i] = interpolateColor(theme->col_light_ctrl, theme->col_dark_ctrl, i<<4);
 
 	int32 step = divf32(inttof32(smp->getNSamples() >> zoom_level), inttof32(width-2));
 	int32 pos = 0;
@@ -592,15 +592,15 @@ void SampleDisplay::draw(void)
 			// Left Triangle
 			if(loop_start_pos > 1 + LOOP_TRIANGLE_SIZE)
 			{
-				drawLine(loop_start_pos-2, DRAW_HEIGHT+1-LOOP_TRIANGLE_SIZE, 2, 1, RGB15(0,0,0)|BIT(15));
+				drawHLine(loop_start_pos-2, DRAW_HEIGHT+1-LOOP_TRIANGLE_SIZE, 2, RGB15(0,0,0)|BIT(15));
 
 				for(u8 i=0; i<LOOP_TRIANGLE_SIZE-2; ++i)
 				{
-					drawLine(loop_start_pos-i-2, DRAW_HEIGHT+2-LOOP_TRIANGLE_SIZE+i, i+2, 1, RGB15(7,25,5)|BIT(15));
+					drawHLine(loop_start_pos-i-2, DRAW_HEIGHT+2-LOOP_TRIANGLE_SIZE+i, i+2, RGB15(7,25,5)|BIT(15));
 					drawPixel(loop_start_pos-i-3, DRAW_HEIGHT+2-LOOP_TRIANGLE_SIZE+i, RGB15(0,0,0)|BIT(15));
 				}
 
-				drawLine(loop_start_pos-LOOP_TRIANGLE_SIZE+1, DRAW_HEIGHT, LOOP_TRIANGLE_SIZE-1, 1,
+				drawHLine(loop_start_pos-LOOP_TRIANGLE_SIZE+1, DRAW_HEIGHT, LOOP_TRIANGLE_SIZE-1,
 					RGB15(7,25,5)|BIT(15));
 				drawPixel(loop_start_pos-LOOP_TRIANGLE_SIZE, DRAW_HEIGHT, RGB15(0,0,0)|BIT(15));
 			}
@@ -608,12 +608,12 @@ void SampleDisplay::draw(void)
 			// Right Triangle
 			if(loop_start_pos < width - 2 - LOOP_TRIANGLE_SIZE)
 			{
-				drawLine(loop_start_pos+1, DRAW_HEIGHT+1-LOOP_TRIANGLE_SIZE, 2, 1, RGB15(0,0,0)|BIT(15));
+				drawHLine(loop_start_pos+1, DRAW_HEIGHT+1-LOOP_TRIANGLE_SIZE, 2, RGB15(0,0,0)|BIT(15));
 				for(u8 i=0; i<LOOP_TRIANGLE_SIZE-2; ++i) {
-					drawLine(loop_start_pos+1, DRAW_HEIGHT+2-LOOP_TRIANGLE_SIZE+i, 2+i, 1, RGB15(7,25,5)|BIT(15));
+					drawHLine(loop_start_pos+1, DRAW_HEIGHT+2-LOOP_TRIANGLE_SIZE+i, 2+i, RGB15(7,25,5)|BIT(15));
 					drawPixel(loop_start_pos+3+i, DRAW_HEIGHT+2-LOOP_TRIANGLE_SIZE+i, RGB15(0,0,0)|BIT(15));
 				}
-				drawLine(loop_start_pos+1, DRAW_HEIGHT-LOOP_TRIANGLE_SIZE+LOOP_TRIANGLE_SIZE, LOOP_TRIANGLE_SIZE-1, 1,
+				drawHLine(loop_start_pos+1, DRAW_HEIGHT-LOOP_TRIANGLE_SIZE+LOOP_TRIANGLE_SIZE, LOOP_TRIANGLE_SIZE-1,
 					RGB15(7,25,5)|BIT(15));
 				drawPixel(loop_start_pos+LOOP_TRIANGLE_SIZE, DRAW_HEIGHT, RGB15(0,0,0)|BIT(15));
 			}
@@ -629,32 +629,32 @@ void SampleDisplay::draw(void)
 			// Left Triangle
 			if(loop_end_pos > 1 + LOOP_TRIANGLE_SIZE)
 			{
-				drawLine(loop_end_pos-LOOP_TRIANGLE_SIZE+1, 1, LOOP_TRIANGLE_SIZE-1, 1,
+				drawHLine(loop_end_pos-LOOP_TRIANGLE_SIZE+1, 1, LOOP_TRIANGLE_SIZE-1,
 					RGB15(7,25,5)|BIT(15));
 				drawPixel(loop_end_pos-LOOP_TRIANGLE_SIZE, 1, RGB15(0,0,0)|BIT(15));
 
 				for(u8 i=0; i<LOOP_TRIANGLE_SIZE-2; ++i)
 				{
-					drawLine(loop_end_pos-LOOP_TRIANGLE_SIZE+i+1, 2+i, LOOP_TRIANGLE_SIZE-i-1, 1, RGB15(7,25,5)|BIT(15));
+					drawHLine(loop_end_pos-LOOP_TRIANGLE_SIZE+i+1, 2+i, LOOP_TRIANGLE_SIZE-i-1, RGB15(7,25,5)|BIT(15));
 					drawPixel(loop_end_pos-1-LOOP_TRIANGLE_SIZE+i+1, 2+i, RGB15(0,0,0)|BIT(15));
 				}
 
-				drawLine(loop_end_pos-2, LOOP_TRIANGLE_SIZE, 2, 1, RGB15(0,0,0)|BIT(15));
+				drawHLine(loop_end_pos-2, LOOP_TRIANGLE_SIZE, 2, RGB15(0,0,0)|BIT(15));
 			}
 
 			// Right Triangle
 			if(loop_end_pos < width-1-LOOP_TRIANGLE_SIZE)
 			{
-				drawLine(loop_end_pos+1, 1, LOOP_TRIANGLE_SIZE-1, 1, RGB15(7,25,5)|BIT(15));
+				drawHLine(loop_end_pos+1, 1, LOOP_TRIANGLE_SIZE-1, RGB15(7,25,5)|BIT(15));
 				drawPixel(loop_end_pos+LOOP_TRIANGLE_SIZE, 1, RGB15(0,0,0)|BIT(15));
 
 				for(u8 i=0; i<LOOP_TRIANGLE_SIZE-2; ++i)
 				{
-					drawLine(loop_end_pos+1, 2+i, LOOP_TRIANGLE_SIZE-i-1, 1, RGB15(7,25,5)|BIT(15));
+					drawHLine(loop_end_pos+1, 2+i, LOOP_TRIANGLE_SIZE-i-1, RGB15(7,25,5)|BIT(15));
 					drawPixel(loop_end_pos+LOOP_TRIANGLE_SIZE-i, 2+i, RGB15(0,0,0)|BIT(15));
 				}
 
-				drawLine(loop_end_pos+1, LOOP_TRIANGLE_SIZE, 2, 1, RGB15(0,0,0)|BIT(15));
+				drawHLine(loop_end_pos+1, LOOP_TRIANGLE_SIZE, 2, RGB15(0,0,0)|BIT(15));
 			}
 		}
 	}
@@ -665,32 +665,32 @@ void SampleDisplay::draw(void)
 
 	if(!draw_mode) {
 		// Outlines
-		drawLine(2, 1, 7, 1, theme->col_light_bg);
-		drawLine(10, 1, 7, 1, theme->col_light_bg);
+		drawHLine(2, 1, 7, theme->col_light_bg);
+		drawHLine(10, 1, 7, theme->col_light_bg);
 
-		drawLine(2, 9, 7, 1, theme->col_light_bg);
-		drawLine(10, 9, 7, 1, theme->col_light_bg);
+		drawHLine(2, 9, 7, theme->col_light_bg);
+		drawHLine(10, 9, 7, theme->col_light_bg);
 
-		drawLine(1, 2, 7, 0, theme->col_light_bg);
-		drawLine(9, 2, 7, 0, theme->col_light_bg);
-		drawLine(17, 2, 7, 0, theme->col_light_bg);
+		drawVLine(1, 2, 7, theme->col_light_bg);
+		drawVLine(9, 2, 7, theme->col_light_bg);
+		drawVLine(17, 2, 7, theme->col_light_bg);
 
 		// +
 		if(pen_on_zoom_in) {
 			drawFullBox(2, 2, 7, 7, theme->col_light_bg);
-			drawLine(3, 5, 5, 1, theme->col_dark_bg);
-			drawLine(5, 3, 5, 0, theme->col_dark_bg);
+			drawHLine(3, 5, 5, theme->col_dark_bg);
+			drawVLine(5, 3, 5, theme->col_dark_bg);
 		} else {
-			drawLine(3, 5, 5, 1, theme->col_light_bg);
-			drawLine(5, 3, 5, 0, theme->col_light_bg);
+			drawHLine(3, 5, 5, theme->col_light_bg);
+			drawVLine(5, 3, 5, theme->col_light_bg);
 		}
 
 		// -
 		if(pen_on_zoom_out) {
 			drawFullBox(10, 2, 7, 7, theme->col_light_bg);
-			drawLine(11, 5, 5, 1, theme->col_dark_bg);
+			drawHLine(11, 5, 5, theme->col_dark_bg);
 		} else {
-			drawLine(11, 5, 5, 1, theme->col_light_bg);
+			drawHLine(11, 5, 5, theme->col_light_bg);
 		}
 	}
 }

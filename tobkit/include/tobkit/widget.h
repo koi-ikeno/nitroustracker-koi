@@ -70,12 +70,13 @@ class Widget {
 		void drawBox(u8 tx, u8 ty, u8 tw, u8 th, u16 col=RGB15(0,0,0)|BIT(15));
 		void drawFullBox(u8 tx, u8 ty, u8 tw, u8 th, u16 col);
 		void drawBorder(u16 col = RGB15(0,0,0)|BIT(15));
-		void drawLine(u8 tx, u8 ty, u8 length, u8 horizontal, u16 col);
+		void drawHLine(u8 tx, u8 ty, u8 length, u16 col);
+		void drawVLine(u8 tx, u8 ty, u8 length, u16 col);
 		void drawBresLine(u8 tx1, u8 ty1, u8 tx2, u8 ty2, u16 col);
 		void drawPixel(u8 tx, u8 ty, u16 col);
 		void drawGradient(u16 col1, u16 col2, u8 tx, u8 ty, u8 tw, u8 th);
 
-		inline const u16 interpolateColor(u16 col1, u16 col2, u8 alpha) {
+		inline const u16 interpolateColor(u16 col1, u16 col2, int alpha /* 0..12 */) {
 			/*
 			u8 r1,g1,b1,r2,g2,b2,rn,gn,bn;
 			r1 = col1 & 0x001F;
@@ -91,10 +92,11 @@ class Widget {
 			*/
 
 			// This is the above code in 1 Line (saves variable allocation time and mem)
-			return RGB15((col1 & 0x001F)*alpha/255 + (col2 & 0x001F)-(col2 & 0x001F)*alpha/255,
-				     ((col1 >> 5) & 0x001F)*alpha/255 + ((col2 >> 5) & 0x001F)-((col2 >> 5) & 0x001F)*alpha/255,
-				     ((col1 >> 10) & 0x001F)*alpha/255 + ((col2 >> 10) & 0x001F)-((col2 >> 10) & 0x001F)*alpha/255
-				     )|BIT(15);
+			return RGB15(
+				((((col1 & 0x001F) - (col2 & 0x001F)) * alpha) + ((col2 & 0x001F) << 12)) >> 12,
+				(((((col1>>5) & 0x001F) - ((col2>>5) & 0x001F)) * alpha) + (((col2>>5) & 0x001F) << 12)) >> 12,
+				(((((col1>>10) & 0x001F) - ((col2>>10) & 0x001F)) * alpha) + (((col2>>10) & 0x001F) << 12)) >> 12
+			)|BIT(15);
 		}
 
 		void drawMonochromeIcon(u8 tx, u8 ty, u8 tw, u8 th, const u8 *icon, u16 color=RGB15(0,0,0)|BIT(15));

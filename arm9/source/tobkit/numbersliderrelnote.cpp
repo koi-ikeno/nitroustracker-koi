@@ -125,7 +125,7 @@ void NumberSliderRelNote::draw(void)
 	}
 	
 	// This draws the connection
-	drawLine(4, 6, 5, 0, theme->col_outline);
+	drawVLine(4, 6, 5, theme->col_outline);
 	
 	// This draws the down-arrow
 	for(j=2;j>=0;j--) {

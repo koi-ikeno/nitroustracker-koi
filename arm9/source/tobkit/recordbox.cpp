@@ -145,7 +145,7 @@ void RecordBox::setTheme(Theme *theme_, u16 bgcolor_)
 void RecordBox::draw(void)
 {
 	drawGradient(theme->col_dark_ctrl, theme->col_light_ctrl, 0, 0, width, 16);
-	drawLine(0,16, width, 1, theme->col_outline);
+	drawHLine(0,16, width, theme->col_outline);
 	if(recording==true)
 	{
 		drawFullBox(0, 17, width, RECORDBOX_HEIGHT-17, theme->col_signal);

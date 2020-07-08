@@ -156,17 +156,15 @@ void Widget::drawBorder(u16 col) {
 	drawBox(0, 0, width, height, col);
 }
 
-void Widget::drawLine(u8 tx, u8 ty, u8 length, u8 horizontal, u16 col) {
+void Widget::drawHLine(u8 tx, u8 ty, u8 length, u16 col) {
+	for(int i=0;i<length;++i) {
+		*(*vram+SCREEN_WIDTH*(y+ty)+i+(x+tx)) = col;
+	}
+}
 
-	u8 i;
-	if(horizontal) {
-		for(i=0;i<length;++i) {
-			*(*vram+SCREEN_WIDTH*(y+ty)+i+(x+tx)) = col;
-		}
-	} else {
-		for(i=0;i<length;++i) {
-			*(*vram+SCREEN_WIDTH*(y+ty+i)+(x+tx)) = col;
-		}
+void Widget::drawVLine(u8 tx, u8 ty, u8 length, u16 col) {
+	for(int i=0;i<length;++i) {
+		*(*vram+SCREEN_WIDTH*(y+ty+i)+(x+tx)) = col;
 	}
 }
 
@@ -277,8 +275,12 @@ void Widget::drawGradient(u16 col1, u16 col2, u8 tx, u8 ty, u8 tw, u8 th) {
 
 	u8 i, j;
 	u16 col;
-	for(j=0;j<th;++j) {
-		col = interpolateColor(col1, col2, j*255/th);
+	
+	int step = div32((1<<12), th);
+	int pos = 0;
+
+	for(j=0;j<th;++j,pos+=step) {
+		col = interpolateColor(col1, col2, pos);
 		for(i=0;i<tw;++i) {
 			*(*vram+SCREEN_WIDTH*(y+ty+j)+x+tx+i) = col;
 		}

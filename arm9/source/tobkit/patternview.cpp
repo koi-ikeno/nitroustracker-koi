@@ -284,17 +284,17 @@ void PatternView::draw(void)
 	
 		if((realrow>=0)&&(realrow<=ptnlen)) {
 			if(realrow%PV_CELL_HEIGHT==0) {
-				drawLine(0, PV_CELL_HEIGHT*i, getEffectiveWidth(), 1, linescol);
+				drawHLine(0, PV_CELL_HEIGHT*i, getEffectiveWidth(), linescol);
 			} else {
-				drawLine(PV_BORDER_WIDTH, PV_CELL_HEIGHT*i,
-					 getEffectiveWidth()-PV_BORDER_WIDTH, 1, col_sublines);
+				drawHLine(PV_BORDER_WIDTH, PV_CELL_HEIGHT*i,
+					 getEffectiveWidth()-PV_BORDER_WIDTH, col_sublines);
 			}
 		}
 	}
 	
 	// V-Lines
 	for(u16 i=0;i<=getNumVisibleChannels();++i) {
-		drawLine(PV_BORDER_WIDTH-1+i*getCellWidth(), 0, width-PV_BORDER_WIDTH, 0, linescol);
+		drawVLine(PV_BORDER_WIDTH-1+i*getCellWidth(), 0, width-PV_BORDER_WIDTH, linescol);
 	}
 	
 	// Cursor bar

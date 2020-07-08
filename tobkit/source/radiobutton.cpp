@@ -46,10 +46,10 @@ void RadioButton::draw(void)
 	//drawFullBox(2, 2, 7, 7, col);
 	drawGradient(theme->col_light_ctrl, theme->col_dark_ctrl ,2, 2, 7, 7);
 	
-	drawLine(3, 1, 5, 1, theme->col_outline);
-	drawLine(3, 9, 5, 1, theme->col_outline);
-	drawLine(1, 3, 5, 0, theme->col_outline);
-	drawLine(9, 3, 5, 0, theme->col_outline);
+	drawHLine(3, 1, 5, theme->col_outline);
+	drawHLine(3, 9, 5, theme->col_outline);
+	drawVLine(1, 3, 5, theme->col_outline);
+	drawVLine(9, 3, 5, theme->col_outline);
 	
 	drawPixel(2, 2, theme->col_outline);
 	drawPixel(8, 2, theme->col_outline);

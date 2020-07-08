@@ -288,7 +288,7 @@ void Typewriter::drawCursor(void)
 	cursory = ly - y + 1;
 	cursorheight = lh - 2;
 	if(cursorx<lx -x + lw) {
-		drawLine(cursorx, cursory, cursorheight, 0, RGB15(0,0,0)|BIT(15));
+		drawVLine(cursorx, cursory, cursorheight, RGB15(0,0,0)|BIT(15));
 	}
 }
 

@@ -77,14 +77,6 @@ class SampleDisplay: public Widget {
 		// Finds a zero corssing in the sample near pos, returns sample when successful, -1 else
 		long find_zero_crossing_near(long pos);
 
-		inline const u16 interpolateColor(u16 col1, u16 col2, u8 alpha) {
-			// This is the above code in 1 Line (saves variable allocation time and mem)
-			return RGB15((col1 & 0x001F)*alpha/255 + (col2 & 0x001F)-(col2 & 0x001F)*alpha/255,
-				     ((col1 >> 5) & 0x001F)*alpha/255 + ((col2 >> 5) & 0x001F)-((col2 >> 5) & 0x001F)*alpha/255,
-				     ((col1 >> 10) & 0x001F)*alpha/255 + ((col2 >> 10) & 0x001F)-((col2 >> 10) & 0x001F)*alpha/255
-				     )|BIT(15);
-		}
-
 		void draw(void);
 		void scroll(u32 newscrollpos);
 		void calcScrollThingy(void);

@@ -71,10 +71,7 @@ void CheckBox::draw(void)
 	else
 		drawGradient(theme->col_light_ctrl_disabled, theme->col_dark_ctrl_disabled,2, 4, 7, 7);
 	
-	drawLine(1, 3, 9, 1, theme->col_outline);
-	drawLine(1,11, 9, 1, theme->col_outline);
-	drawLine(1, 3, 9, 0, theme->col_outline);
-	drawLine(9, 3, 9, 0, theme->col_outline);
+	drawBox(1, 3, 9, 9, theme->col_outline);
 	
 	// Clear up
 	if(!albino)

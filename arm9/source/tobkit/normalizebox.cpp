@@ -115,7 +115,7 @@ void NormalizeBox::setTheme(Theme *theme_, u16 bgcolor_)
 void NormalizeBox::draw(void)
 {
 	drawGradient(theme->col_list_highlight1, theme->col_list_highlight2, 0, 0, width, 16);
-	drawLine(0,16, width, 1, RGB15(0,0,0)|BIT(15));
+	drawHLine(0,16, width, RGB15(0,0,0)|BIT(15));
 	drawFullBox(0, 17, width, NORMALIZEBOX_HEIGHT-17, theme->col_light_bg);
 	drawBorder();
 	
