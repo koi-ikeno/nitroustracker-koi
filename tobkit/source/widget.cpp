@@ -144,11 +144,11 @@ void Widget::drawBox(u8 tx, u8 ty, u8 tw, u8 th, u16 col)
 
 void Widget::drawFullBox(u8 tx, u8 ty, u8 tw, u8 th, u16 col)
 {
-	u8 i,j;
-	for(i=0;i<tw;++i) {
-		for(j=0;j<th;++j) {
-			*(*vram+SCREEN_WIDTH*(y+ty+j)+i+(x+tx)) = col;
-		}
+	if (tw == 0) return;
+
+	int bw = (int) tw * 2;
+	for(int j=0;j<th;++j) {
+		dmaFillHalfWords(col, (*vram+SCREEN_WIDTH*(y+ty+j)+(x+tx)), bw);
 	}
 }
 
@@ -273,17 +273,18 @@ void Widget::drawPixel(u8 tx, u8 ty, u16 col) {
 
 void Widget::drawGradient(u16 col1, u16 col2, u8 tx, u8 ty, u8 tw, u8 th) {
 
-	u8 i, j;
+	u8 j;
 	u16 col;
 	
+	if (tw == 0) return;
+
+	int bw = tw * 2;
 	int step = div32((1<<12), th);
 	int pos = 0;
 
 	for(j=0;j<th;++j,pos+=step) {
 		col = interpolateColor(col1, col2, pos);
-		for(i=0;i<tw;++i) {
-			*(*vram+SCREEN_WIDTH*(y+ty+j)+x+tx+i) = col;
-		}
+		dmaFillHalfWords(col, (*vram+SCREEN_WIDTH*(y+ty+j)+(x+tx)), bw);
 	}
 }
 

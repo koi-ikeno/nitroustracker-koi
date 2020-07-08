@@ -14,7 +14,6 @@ class MemoryIndicator : public Widget
 			
 	private:
 		void draw(void);
-		u32 getFreeMem(void);
 		
 		u32 total_ram;
 };

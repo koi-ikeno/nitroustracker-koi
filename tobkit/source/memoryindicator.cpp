@@ -3,12 +3,29 @@
 
 #include "tobkit/memoryindicator.h"
 
+#define clamp(v, vmin, vmax) (((v) < (vmin)) ? (vmin) : ((v > (vmax)) ? (vmax) : (v)))
+
+/* https://devkitpro.org/viewtopic.php?f=6&t=3057 */
+
+extern u8 *fake_heap_end;
+extern u8 *fake_heap_start;
+
+static int getUsedMem() {
+	struct mallinfo mi = mallinfo();
+	return mi.uordblks; 
+}
+
+static int getFreeMem() {
+	struct mallinfo mi = mallinfo();
+	return mi.fordblks + (fake_heap_end - (u8*)sbrk(0));
+}
+
 /* ===================== PUBLIC ===================== */
 
 MemoryIndicator::MemoryIndicator(u8 _x, u8 _y, u8 _width, u8 _height, u16 **_vram, bool _visible)
 	:Widget(_x, _y, _width, _height, _vram, _visible)
 {
-	total_ram = getFreeMem();
+	total_ram = getFreeMem() + getUsedMem(); // only estimate!
 }
 
 MemoryIndicator::~MemoryIndicator()
@@ -22,70 +39,27 @@ void MemoryIndicator::pleaseDraw(void)
 
 /* ===================== PRIVATE ===================== */
 
+#define COL_INDICATOR_OK (RGB15(17,24,16) | BIT(15))
+#define COL_INDICATOR_WARNING (RGB15(31,31,0) | BIT(15))
+#define COL_INDICATOR_ALERT (RGB15(31,0,0) | BIT(15))
 
 void MemoryIndicator::draw(void)
 {
-	struct mallinfo mi = mallinfo();
-	u32 used_ram = mi.uordblks; 
+	u32 used_ram = getUsedMem();
 	
-	int boxwidth = (width - 2) * used_ram / total_ram;
-	int percentfull = 100 * used_ram / total_ram;
-	//printf("%d\n",percentfull );
+	int boxwidth = clamp((width - 2) * used_ram / total_ram, 0, (u32) (width - 2));
+	int percentfull = clamp(100 * used_ram / total_ram, 0, 100);
 	
 	// Color depends on percentage of full ram
 	u16 col;
-	if(percentfull < 70)
-		col = RGB15(17,24,16) | BIT(15); // Green
-	else if(percentfull < 90)
-		col = RGB15(31,31,0) | BIT(15); // Yellow
+	if(percentfull < 68)
+		col = COL_INDICATOR_OK; // Green
+	else if(percentfull < 84)
+		col = interpolateColor(COL_INDICATOR_WARNING, COL_INDICATOR_OK, (percentfull - 68) << 8); // Yellow
 	else
-		col = RGB15(31,0,0) | BIT(15); // Red
+		col = interpolateColor(COL_INDICATOR_ALERT, COL_INDICATOR_WARNING, (percentfull - 84) << 8); // Yellow
 	
 	drawBorder(theme->col_outline);
 	drawFullBox(1, 1, width-2, height-2, theme->col_light_bg);
 	drawFullBox(1, 1, boxwidth, height-2, col);
-}
-
-bool testmalloc(int size)
-{
-	if(size<=0) return(false);
-	
-	void *ptr;
-	u32 adr;
-	
-	ptr=malloc(size+(64*1024)); // 64kb
-	
-	if(ptr==NULL) return(false);
-	
-	adr=(u32)ptr;
-	free(ptr);
-	
-	if((adr&3)!=0){ // 4byte
-		return(false);
-	}
-	
-	if((adr+size)<0x02000000){
-		return(false);
-	}
-	
-	if((0x02000000+(4*1024*1024))<=adr){
-		return(false);
-	}
-	
-	return(true);
-}
-
-#define PrintFreeMem_Seg (10240)
-
-u32 MemoryIndicator::getFreeMem(void)
-{
-	s32 i;
-	u32 FreeMemSize=0;
-	
-	for(i=1*PrintFreeMem_Seg;i<4096*1024;i+=PrintFreeMem_Seg){
-		if(testmalloc(i)==false) break;
-		FreeMemSize=i;
-	}
-	
-	return FreeMemSize;
 }
