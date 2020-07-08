@@ -78,6 +78,7 @@ class EnvelopeEditor: public Widget
 
 		void addPoint(void);
 		void delPoint(void);
+		void clear(void);
 
 		void zoomIn(void);
 		void zoomOut(void);

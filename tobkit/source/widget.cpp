@@ -18,10 +18,10 @@ Widget::Widget(u8 _x, u8 _y, u8 _width, u8 _height, u16 **_vram, bool _visible, 
 // Get position
 void Widget::getPos(u8 *_x, u8 *_y, u8 *_width, u8 *_height)
 {
-	*_x = x;
-	*_y = y;
-	*_width = width;
-	*_height = height;
+	if (_x != NULL) *_x = x;
+	if (_y != NULL) *_y = y;
+	if (_width != NULL) *_width = width;
+	if (_height != NULL) *_height = height;
 }
 
 void Widget::setPos(u8 _x, u8 _y)

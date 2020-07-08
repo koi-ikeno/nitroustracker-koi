@@ -62,6 +62,10 @@ class GUI {
 		void occludeAll(void);
 		void revealAll(void);
 
+		inline std::vector<Widget*> getWidgets(u8 screen = SUB_SCREEN) {
+			return screen == SUB_SCREEN ? widgets_sub : widgets_main;
+		};
+
 	private:
 		std::vector<Widget*> widgets_main, widgets_sub;
 		std::vector<Widget*> shortcuts;

@@ -24,7 +24,6 @@
 
 #define GURU // Show guru meditations
 //#define SPLASH
-//#define WIFIDEBUG
 #define WIFI
 #define USE_FAT
 
@@ -245,8 +244,6 @@ u8 dsmw_lastchannels[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 bool fastscroll = false;
 
 uint16* map;
-
-char **arm7debugstrs;
 
 // TODO: Make own class for tracker control and remove forward declarations
 void handleButtons(u16 buttons, u16 buttonsheld);
@@ -678,7 +675,6 @@ void setSong(Song *newsong)
 
 	free(str);
 
-	//gui->draw();
 	drawMainScreen();
 
 	PrintFreeMem();
@@ -1048,12 +1044,10 @@ void drawMainScreen(void)
 
 	if(active_buffer == FRONT_BUFFER) {
 	    bgSetMapBase(2, 2);
-		//BG2_CR = BG_BMP16_256x256 | BG_BMP_BASE(2);
 		main_vram_front = (uint16*)BG_BMP_RAM(2);
 		main_vram_back = (uint16*)BG_BMP_RAM(8);
 	} else {
 	    bgSetMapBase(2, 8);
-		//BG2_CR = BG_BMP16_256x256 | BG_BMP_BASE(8);
 		main_vram_front = (uint16*)BG_BMP_RAM(8);
 		main_vram_back = (uint16*)BG_BMP_RAM(2);
 	}
@@ -1958,44 +1952,20 @@ void swapControls(Handedness handedness)
 
 void swapPatternButtons(Handedness handedness)
 {
-	if(handedness == LEFT_HANDED)
-	{
-		buttonswitchmain->setPos(8, 1);
-		labelmute->setPos(1, 23);
-		buttonunmuteall->setPos(0, 32);
-		labelnotevol->setPos(5, 44);
-		nsnotevolume->setPos(0, 54);
-		buttonsetnotevol->setPos(0, 70);
-		buttoncut->setPos(0,  86);
-		buttoncopy->setPos(0, 99);
-		buttonpaste->setPos(0, 112);
-		buttoncolselect->setPos(0, 125);
-		buttoninsnote->setPos(0, 140);
-		buttondelnote->setPos(0, 153);
-		buttonemptynote2->setPos(0, 166);
-		buttonstopnote2->setPos(0, 179);
+	u8 x, y;
+	pv->getPos(&x, &y, NULL, NULL);
 
-		pv->setPos(30, 0);
-	}
-	else
-	{
-		buttonswitchmain->setPos(233, 1);
-		labelmute->setPos(226, 23);
-		buttonunmuteall->setPos(225, 32);
-		labelnotevol->setPos(230, 44);
-		nsnotevolume->setPos(225, 54);
-		buttonsetnotevol->setPos(225, 70);
-		buttoncut->setPos(225,  86);
-		buttoncopy->setPos(225, 99);
-		buttonpaste->setPos(225, 112);
-		buttoncolselect->setPos(225, 125);
-		buttoninsnote->setPos(225, 140);
-		buttondelnote->setPos(225, 153);
-		buttonemptynote2->setPos(225, 166);
-		buttonstopnote2->setPos(225, 179);
+	Handedness current_handedness = x == 30 ? LEFT_HANDED : RIGHT_HANDED;
+	if (current_handedness == handedness) return;
 
-		pv->setPos(0, 0);
+	std::vector<Widget*> widgets = gui->getWidgets(MAIN_SCREEN);
+	int offset = (handedness == LEFT_HANDED) ? -225 : 225;
+
+	for (Widget* widget : widgets) {
+		widget->getPos(&x, &y, NULL, NULL);
+		widget->setPos(x + offset, y);
 	}
+	pv->setPos(handedness == LEFT_HANDED ? 30 : 0, 0);
 
 	redraw_main_requested = true;
 }
@@ -2032,6 +2002,7 @@ void switchScreens(void)
 // Create the song and do other init stuff yet to be determined.
 void setupSong(void) {
 	song = new Song(6, 125);
+	action_buffer = new ActionBuffer(isDSiMode() ? 1024 : 256);
 	DC_FlushAll();
 }
 
@@ -3274,15 +3245,6 @@ void VblankHandler(void)
 		gui->buttonPress(keysdown);
 		handleButtons(keysdown, keysheld);
 		pv->pleaseDraw();
-
-		/*
-		// TODO: Better standby mode.
-		if(keysdown & mykey_LID) {
-			while(keysHeld() & mykey_LID) {
-				POWER_CR = 0;
-			}
-			POWER_CR = POWER_ALL;
-		}*/
 	}
 
 	if(keysup)
@@ -3292,12 +3254,6 @@ void VblankHandler(void)
 		if(keysup & mykey_B)
 			fastscroll = false;
 	}
-
-	// TODO: move to ->add
-	if (action_buffer->can_undo())
-		buttonundo->show();
-	if (action_buffer->can_redo())
-		buttonredo->show();
 
 	// Easy Piano pak handling logic
 	if (pianoIsInserted())
@@ -3326,19 +3282,6 @@ void VblankHandler(void)
 	}
 
 	frame = (frame + 1) % 2;
-
-#ifdef DEBUG
-	/*
-	static s32 screenmove;
-	if((keysheld&mykey_L)&&(keysheld&mykey_R)) {
-		screenmove -= 10<<8;
-	} else {
-		screenmove = 0;
-	}
-	bgSetScroll(2, screenmove, 0);
-	bgUpdate();
-	*/
-#endif
 }
 
 extern "C" void debug_print_stub(char *string)
@@ -3462,9 +3405,6 @@ int main(int argc, char **argv) {
 
 #ifdef SPLASH
 	splash_show();
-#else
-	//BRIGHTNESS = 1 << 14 | 16;
-	//SUB_BRIGHTNESS = 1 << 14 | 16;
 #endif
 
 	// Main screen: Text and double buffer ERB
@@ -3481,13 +3421,11 @@ int main(int argc, char **argv) {
 	int piano_bg = bgInitSub(0, BgType_Text4bpp, BgSize_T_256x256, 1, 0);
 	bgSetScroll(piano_bg, 0, 0);
 	bgSetPriority(piano_bg, 2);
-	//SUB_BG0_CR = BG_COLOR_16 | BG_32x32 | BG_MAP_BASE(1) | BG_TILE_BASE(0) | BG_PRIORITY(2);
 
 	// SUB_BG1 for Typewriter Tiles
 	videoBgEnableSub(1);
 	int typewriter_bg = bgInitSub(1, BgType_Text4bpp, BgSize_T_256x256, 12, 1);
 	bgSetPriority(typewriter_bg, 0);
-	//SUB_BG1_CR = BG_COLOR_16 | BG_32x32 | BG_MAP_BASE(12) | BG_TILE_BASE(1) | BG_PRIORITY(0);
 
 #ifdef DEBUG
 	u8 text_priority = 0;
@@ -3500,20 +3438,10 @@ int main(int argc, char **argv) {
 	// Pattern view
 	int ptn_bg = bgInit(2, BgType_Bmp16, BgSize_B16_256x256, 2, 0);
 	bgSetPriority(ptn_bg, bg_priority);
-	//BG2_CR = BG_BMP16_256x256 | BG_BMP_BASE(2) | BG_PRIORITY(bg_priority);
-//	BG2_XDX = 1 << 8;
-//	BG2_XDY = 0;
-//	BG2_YDX = 0;
-//	BG2_YDY = 1 << 8;
 
 	// Sub screen framebuffer
 	int sub_bg = bgInitSub(2, BgType_Bmp16, BgSize_B16_256x256, 2, 0);
 	bgSetPriority(sub_bg, 0);
-	//SUB_BG2_CR = BG_BMP16_256x256 | BG_BMP_BASE(2) | BG_PRIORITY(0);
-//	SUB_BG2_XDX = 1 << 8;
-//	SUB_BG2_XDY = 0;
-//	SUB_BG2_YDX = 0;
-//	SUB_BG2_YDY = 1 << 8;
 
 	// Special effects
 	REG_BLDCNT_SUB = BLEND_FADE_BLACK | BLEND_SRC_BG2 | BLEND_SRC_BG0;
@@ -3522,9 +3450,6 @@ int main(int argc, char **argv) {
 	// Setup text
 	consoleInit(NULL, 0, BgType_Text4bpp, BgSize_T_256x256, 4, 0, true, true);
 	bgSetPriority(0, text_priority);
-	//BG0_CR = BG_MAP_BASE(4) | BG_TILE_BASE(0) | BG_PRIORITY(text_priority);
-	//BG_PALETTE[255] = RGB15(0,29,4);
-	//consoleInitDefault((u16*)SCREEN_BASE_BLOCK(4), (u16*)CHAR_BASE_BLOCK(0), 16);
 
 	bgUpdate();
 
@@ -3561,27 +3486,11 @@ int main(int argc, char **argv) {
 	}
 
 	state = new State();
-	action_buffer = new ActionBuffer(isDSiMode() ? 1024 : 256);
 
 	settings = new Settings(launch_path, fat_success);
 
 	clearMainScreen();
 	clearSubScreen();
-
-#ifdef WIFIDEBUG
-	// Wireless debugging
-	set_verbosity(VERBOSE_INFO | VERBOSE_ERROR);//OR together VERBOSE_INFO/VERBOSE_ERROR/VERBOSE_TRACE to get the level of detail right. I'd recommend VERBOSE_INFO | VERBOSE_ERROR, or VERBOSE_ERROR at the very least
-
-	iprintf("init wifi\n");
-	wireless_init(0);	//zero if you've already set up your irqs, non-zero if you haven't yet called irqInit()
-	iprintf("connect via wifi\n");
-	wireless_connect();                     //connect to the AP
-
-	iprintf("debugger connect\n");
-	debugger_connect_tcp(192, 168, 1, 33);	//your IP here
-	iprintf("debugger init\n");
-	debugger_init();
-#endif
 
 	// Key repeat handling: enable repeat
 	keysSetRepeat(REPEAT_START_DELAY, 60 / REPEAT_FREQ);
@@ -3592,8 +3501,6 @@ int main(int argc, char **argv) {
 	RegisterStopCallback(handleStop);
 	RegisterPlaySampleFinishedCallback(handlePreviewSampleFinished);
 	RegisterPotPosChangeCallback(handlePotPosChangeFromSong);
-
-	//setupArm7Debug(); // Give arm7 a charbuf for debug msgs
 
 	setupSong();
 
@@ -3619,9 +3526,6 @@ int main(int argc, char **argv) {
 	while(!exit_requested)
 	{
 		VblankHandler();
-#ifdef WIFIDEBUG
-		user_debugger_update();
-#endif
 
 #ifdef WIFI
 		if( state->dsmi_connected ) {

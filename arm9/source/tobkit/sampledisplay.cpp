@@ -392,10 +392,8 @@ void SampleDisplay::draw(void)
 	//
 	// Border and background
 	//
-	//drawFullBox(0, 0, width, height, theme->col_dark_bg);
-	u32 colcol = theme->col_dark_bg | theme->col_dark_bg << 16;
-	for(int j=y;j<y+height;++j) dmaFillWords(colcol, *vram+256*j+x, width*2);
-
+	drawFullBox(0, 0, width, height, theme->col_dark_bg);
+	
 	if(active==false) {
 		drawBorder();
 	} else {

@@ -177,25 +177,23 @@ inline bool compare_filenames(File f1, File f2)
 // Handles everything if there's no filter
 void FileSelector::read_directory(void)
 {
-	//iprintf("%d\n", __LINE__);
 	// Go though dir and collect files
 	filelist.clear();
-//iprintf("%d\n", __LINE__);
 
 	if( chdir(current_directory.c_str()) == -1 ) {
 		iprintf("cwd to %s failed\n", current_directory.c_str());
 		return;
 	}
-	//iprintf("%d\n", __LINE__);
+
 	DIR *dir;
 	struct stat filestats;
-	//iprintf("%d\n", __LINE__);
+
 	if((dir = opendir(current_directory.c_str())) == NULL)
 	{
 		iprintf("Dir read error!\n");
 		return;
 	}
-	//iprintf("%d\n", __LINE__);
+
 	struct dirent *direntry = readdir(dir);
 
 	if(direntry == NULL)
@@ -206,7 +204,6 @@ void FileSelector::read_directory(void)
 	}
 
 	char *filename = (char*)malloc(PATH_MAX);
-	//iprintf("%d\n", __LINE__);
 	while(direntry != NULL)
 	{
 		if(direntry->d_name[0] != '.') { // Hidden and boring files
@@ -225,18 +222,13 @@ void FileSelector::read_directory(void)
         			newfile.size = filestats.st_size;
                 }
             }
-			//iprintf("%d\n", __LINE__);
 			filelist.push_back(newfile);
-			//iprintf("%d\n", __LINE__);
 		}
-		//iprintf("%d\n", __LINE__);
 		direntry = readdir(dir);
-		//iprintf("%d\n", __LINE__);
 	}
 
 	closedir(dir);
 	free(filename);
-	//iprintf("%d\n", __LINE__);
 	// Apply filter if there is one
 	if(active_filterset != "") {
 		std::vector<File> newfilelist;
@@ -276,13 +268,11 @@ void FileSelector::read_directory(void)
 
 	// Sort
 	sort(filelist.begin(), filelist.end(), compare_filenames);
-	//iprintf("%d\n", __LINE__);
 	// Display
 	elements.clear();
-	//iprintf("%d\n", __LINE__);
 	activeelement = 0;
 	scrollpos = 0;
-	//iprintf("%d\n", __LINE__);
+
 	filename = (char*) calloc(1, 256);
 	std::string newentry;
 	for(u16 i=0;i<filelist.size();++i) {
@@ -294,9 +284,6 @@ void FileSelector::read_directory(void)
 		elements.push_back(filename);
 	}
 	free(filename);
-	//iprintf("%d\n", __LINE__);
 	calcScrollThingy();
-	//iprintf("%d\n", __LINE__);
 	draw();
-	//iprintf("%d\n", __LINE__);
 }

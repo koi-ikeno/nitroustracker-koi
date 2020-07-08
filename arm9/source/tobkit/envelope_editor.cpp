@@ -365,6 +365,18 @@ void EnvelopeEditor::delPoint(void)
 	}
 }
 
+void EnvelopeEditor::clear(void)
+{
+	if (n_points != 0)
+	{
+		// Delete all points
+		n_points = 0;
+
+		if(onPointsChange != 0)
+			onPointsChange();
+	}
+}
+
 void EnvelopeEditor::zoomIn(void)
 {
 	if(zoom_level < ENVELOPE_MAX_ZOOM)
@@ -410,11 +422,7 @@ void EnvelopeEditor::setZoomAndPos(int _zoom, int _pos)
 
 void EnvelopeEditor::startDrawMode(void)
 {
-	// Delete all points
-	n_points = 0;
-
-	//if(onPointsChange != 0)
-	//	onPointsChange();
+	clear();
 
 	// Init Draw mode
 	draw_mode = true;
