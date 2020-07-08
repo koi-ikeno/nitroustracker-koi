@@ -223,8 +223,8 @@ bool CellDeleteAction::revert(Song *song)
 
 // buffer
 
-#define ACTION_BUFFER_INC(i) ((i) + 1) % action_size
-#define ACTION_BUFFER_DEC(i) ((i) == 0) ? (action_size - 1) : ((i) - 1)
+#define ACTION_BUFFER_INC(i) (((i) + 1) % action_size)
+#define ACTION_BUFFER_DEC(i) (((i) == 0) ? (action_size - 1) : ((i) - 1))
 
 void ActionBuffer::clear_at(int i)
 {

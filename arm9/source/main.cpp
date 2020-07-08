@@ -77,6 +77,9 @@
 #include "icon_play_raw.h"
 #include "icon_stop_raw.h"
 
+#include "icon_undo_raw.h"
+#include "icon_redo_raw.h"
+
 #include "sampleedit_control_icon_raw.h"
 #include "sampleedit_chip_icon_raw.h"
 #include "sampleedit_wave_icon_raw.h"
@@ -215,7 +218,7 @@ GUI *gui;
 	Button *buttonins, *buttondel, *buttonstopnote2, *buttoncolselect, *buttonemptynote2, *buttonunmuteall;
 	BitButton *buttonswitchmain;
 	Button *buttoncut, *buttoncopy, *buttonpaste, *buttonsetnotevol;
-	Button *buttonundo, *buttonredo;
+	BitButton *buttonundo, *buttonredo;
 	PatternView *pv;
 	NumberSlider *nsnotevolume;
 	Label *labelmute, *labelnotevol;
@@ -982,12 +985,9 @@ void stopNoteStroke(void) {
 }
 
 static void actionBufferChangeCallback(void) {
-	bool changed = false;
-	changed |= buttonundo->set_enabled(action_buffer->can_undo());
-	changed |= buttonredo->set_enabled(action_buffer->can_redo());
-	if (changed) {
-		redraw_main_requested = true;
-	}
+	buttonundo->set_enabled(action_buffer->can_undo());
+	buttonredo->set_enabled(action_buffer->can_redo());
+	redraw_main_requested = true;
 }
 
 void undoOp(void) {
@@ -2930,8 +2930,8 @@ void setupGUI(bool dldi_enabled)
 	buttonpause        = new BitButton(180, 4  , 23, 15, &sub_vram, icon_pause_raw, 12, 12, 5, 0, false);
 	buttonstop         = new BitButton(204, 4  , 23, 15, &sub_vram, icon_stop_raw, 12, 12, 5, 0);
 
-	buttonundo         = new Button(225, 127, 15, 12, &sub_vram);
-	buttonredo         = new Button(225 + 15, 127, 15, 12, &sub_vram);
+	buttonundo         = new BitButton(226, 127, 14, 12, &sub_vram, icon_undo_raw, 8, 8, 3, 2);
+	buttonredo         = new BitButton(226 + 15, 127, 14, 12, &sub_vram, icon_redo_raw, 8, 8, 3, 2);
 	buttoninsnote2     = new Button(225, 140, 30, 12, &sub_vram);
 	buttondelnote2     = new Button(225, 153, 30, 12, &sub_vram);
 	buttonemptynote    = new Button(225, 166, 30, 12, &sub_vram);
@@ -2941,9 +2941,7 @@ void setupGUI(bool dldi_enabled)
 
 	tbmultisample      = new ToggleButton(165, 21, 10, 10, &sub_vram);
 
-	buttonundo->setCaption("un");
 	buttonundo->registerPushCallback(undoOp);
-	buttonredo->setCaption("re");
 	buttonredo->registerPushCallback(redoOp);
 
 	cbloop = new CheckBox(178, 19, 30, 12, &sub_vram, true, false, true);
