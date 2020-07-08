@@ -27,7 +27,6 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <fat.h>
 #include <nds.h>
 
 // A collection of utilities for everyday DS coding

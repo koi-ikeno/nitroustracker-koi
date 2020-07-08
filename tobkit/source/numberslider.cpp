@@ -50,6 +50,11 @@ void NumberSlider::penDown(u8 px, u8 py)
 void NumberSlider::penUp(u8 px, u8 py)
 {
 	btnstate = false;
+
+	if(onPostChange!=0) {
+		onPostChange(value);
+	}
+
 	draw();
 }
 
@@ -110,6 +115,10 @@ s32 NumberSlider::getValue(void) {
 }
 
 // Callback registration
+void NumberSlider::registerPostChangeCallback(void (*onPostChange_)(s32)) {
+	onPostChange = onPostChange_;
+}
+
 void NumberSlider::registerChangeCallback(void (*onChange_)(s32)) {
 	onChange = onChange_;
 }
