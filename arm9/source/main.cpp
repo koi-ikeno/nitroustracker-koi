@@ -272,11 +272,8 @@ void clearSubScreen(void)
 	dmaFillWords(colcol, sub_vram, 256 * 153 * 2);
 	for(int y=154;y<192;++y)
 	{
-		int x = 0;
-		for(;x<224;++x)
-			sub_vram[256*y+x] = 0;
-		for(;x<256;++x)
-			sub_vram[256*y+x] = colcol;
+		dmaFillWords(0, sub_vram + (256*y), 224 * 2);
+		dmaFillWords(colcol, sub_vram + (256*y) + 224, (256 - 224) * 2);
 	}
 }
 
@@ -3360,23 +3357,24 @@ void saveScreenshot(void)
 {
 	iprintf("Saving screenshot\n");
 	u8 *screenbuf = (u8*)malloc(256*192*3*2);
+	u8 *screenptr = screenbuf;
 
 	u16 col;
 	for(u32 i=0;i<192*256;++i) {
 		col = main_vram_front[i];
-		screenbuf[3*i+0] = (col & 63) << 3;
+		*(screenptr++) = (col & 0x1F) << 3;
 		col >>= 5;
-		screenbuf[3*i+1] = (col & 63) << 3;
+		*(screenptr++) = (col & 0x1F) << 3;
 		col >>= 5;
-		screenbuf[3*i+2] = (col & 63) << 3;
+		*(screenptr++) = (col & 0x1F) << 3;
 	}
-	for(u32 i=192*256;i<2*192*256;++i) {
-		col = sub_vram[i-192*256];
-		screenbuf[3*i+0] = (col & 63) << 3;
+	for(u32 i=0;i<192*256;++i) {
+		col = sub_vram[i];
+		*(screenptr++) = (col & 0x1F) << 3;
 		col >>= 5;
-		screenbuf[3*i+1] = (col & 63) << 3;
+		*(screenptr++) = (col & 0x1F) << 3;
 		col >>= 5;
-		screenbuf[3*i+2] = (col & 63) << 3;
+		*(screenptr++) = (col & 0x1F) << 3;
 	}
 
 	static u8 filenr = 0;
@@ -3533,9 +3531,7 @@ int main(int argc, char **argv) {
 	sub_vram  = (uint16*)BG_BMP_RAM_SUB(2);
 
 	// Clear tile mem
-	for(u32 i=0; i<(32*1024); ++i) {
-		((u16*)BG_BMP_RAM_SUB(0))[i] = 0;
-	}
+	dmaFillWords(0, BG_BMP_RAM_SUB(0), 32*1024);
 
 	irqEnable(IRQ_VBLANK);
 
