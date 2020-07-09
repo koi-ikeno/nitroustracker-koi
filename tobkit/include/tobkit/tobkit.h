@@ -5,7 +5,6 @@
 #include <tobkit/button.h>
 #include <tobkit/checkbox.h>
 #include <tobkit/fileselector.h>
-#include <tobkit/fontchars.h>
 #include <tobkit/groupbox.h>
 #include <tobkit/gui.h>
 #include <tobkit/piano_hit.h>

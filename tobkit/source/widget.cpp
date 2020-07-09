@@ -2,8 +2,7 @@
 #include <stdio.h>
 
 #include "tobkit/widget.h"
-#include "tobkit/fontchars.h"
-#include "font_8x11_raw.h"
+#include "font_8x11.inc"
 
 #define	abs(x)	(x<0?(-x):(x))
 
@@ -117,26 +116,24 @@ bool Widget::set_enabled(bool value)
 
 /* ===================== PROTECTED ===================== */
 
-static inline u8 getCharIdx(char c)
-{
-	char *charptr = strchr(fontchars, c);
-	return charptr ? (charptr - fontchars) : 66 /* ? */;
-}
-
 // Draw utility functions
 
+ITCM_CODE
 void Widget::drawString(const char* str, u8 tx, u8 ty, u8 maxwidth, u16 color)
 {
 	// Draw text
-	u8 pos=0, charidx, i, j;
+	u8 charidx, i, j;
 	u16 drawpos = 0; u8 col;
 
-	while( (pos<strlen(str)) && (drawpos+6<maxwidth) )
-	{
-		charidx = getCharIdx(str[pos]);
+	u8 height = font_8x11.height;
 
-		for(j=0;j<N_FONT_HEIGHT;++j) {
-			col = font_8x11_raw[N_FONT_HEIGHT*charidx + j];
+	while( (*str != '\0') && (drawpos+6<maxwidth) )
+	{
+		charidx = font_8x11.char_index[(u8) *str];
+		u8 width = font_8x11.char_widths[charidx];
+
+		for(j=0;j<height;++j) {
+			col = font_8x11.data[height*charidx + j];
 			for(i=0;i<8;++i,col>>=1) {
 				// Print a character from the bitmap font
 				// each char is 8 pixels wide, and 8 pixels
@@ -147,11 +144,12 @@ void Widget::drawString(const char* str, u8 tx, u8 ty, u8 maxwidth, u16 color)
 			}
 		}
 
-		drawpos += charwidths_8x11[charidx]+1;
-		pos++;
+		drawpos += width+1;
+		str++;
 	}
 }
 
+ITCM_CODE
 void Widget::drawBox(u8 tx, u8 ty, u8 tw, u8 th, u16 col)
 {
 	u8 i,j;
@@ -165,6 +163,7 @@ void Widget::drawBox(u8 tx, u8 ty, u8 tw, u8 th, u16 col)
 	}
 }
 
+ITCM_CODE
 void Widget::drawFullBox(u8 tx, u8 ty, u8 tw, u8 th, u16 col)
 {
 	if (tw == 0) return;
@@ -179,18 +178,21 @@ void Widget::drawBorder(u16 col) {
 	drawBox(0, 0, width, height, col);
 }
 
+ITCM_CODE
 void Widget::drawHLine(u8 tx, u8 ty, u8 length, u16 col) {
 	for(int i=0;i<length;++i) {
 		*(*vram+SCREEN_WIDTH*(y+ty)+i+(x+tx)) = col;
 	}
 }
 
+ITCM_CODE
 void Widget::drawVLine(u8 tx, u8 ty, u8 length, u16 col) {
 	for(int i=0;i<length;++i) {
 		*(*vram+SCREEN_WIDTH*(y+ty+i)+(x+tx)) = col;
 	}
 }
 
+ITCM_CODE
 void Widget::drawBresLine(u8 tx1, u8 ty1, u8 tx2, u8 ty2, u16 col)
 {
 	u32 x1, y1, x2, y2;
@@ -294,6 +296,7 @@ void Widget::drawPixel(u8 tx, u8 ty, u16 col) {
 	*(*vram+SCREEN_WIDTH*(y+ty)+x+tx) = col;
 }
 
+ITCM_CODE
 void Widget::drawGradient(u16 col1, u16 col2, u8 tx, u8 ty, u8 tw, u8 th) {
 
 	u8 j;
@@ -312,19 +315,21 @@ void Widget::drawGradient(u16 col1, u16 col2, u8 tx, u8 ty, u8 tw, u8 th) {
 }
 
 // How wide is the string when rendered?
-u8 Widget::getStringWidth(const char *str, u16 limit)
+ITCM_CODE
+u32 Widget::getStringWidth(const char *str, u16 limit)
 {
-	u8 i,res=0,charidx,len = strlen(str);
-	if((limit!=USHRT_MAX)&&(limit<len)) {
-		len = limit;
-	}
-	for(i=0;i<len;++i) {
-		charidx = getCharIdx(str[i]);
-		res += charwidths_8x11[charidx] + 1;
+	u32 res = 0;
+	for(u16 i=0; i<limit; ++i, ++str) {
+		char c = *str;
+		if (c == '\0') {
+			return res;
+		}
+		res += font_8x11.char_widths[font_8x11.char_index[(u8) *str]] + 1;
 	}
 	return res;
 }
 
+ITCM_CODE
 void Widget::drawMonochromeIcon(u8 tx, u8 ty, u8 tw, u8 th, const u8 *icon, u16 color) {
 	u16 pixelidx = 0;
 	for(u8 j=0;j<th;++j) {
@@ -336,6 +341,7 @@ void Widget::drawMonochromeIcon(u8 tx, u8 ty, u8 tw, u8 th, const u8 *icon, u16 
 	}
 }
 
+ITCM_CODE
 void Widget::drawMonochromeIconOffset(u8 tx, u8 ty, u8 tw, u8 th, u8 ix, u8 iy, u8 iw, u8 ih, const u8 *icon, u16 color) {
 	for(u8 j=0;j<th;++j) {
 		u16 pixelidx = ((iy+j) * iw) + ix;

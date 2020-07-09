@@ -11,6 +11,13 @@ Has rectangular area
 
 #include "theme.h"
 
+struct Font {
+	u8 width, height;
+	const u8* char_index;
+	const u8* char_widths;
+	const u8* data;
+};
+
 class Widget {
 	public:
 		// Constructor sets base variables
@@ -109,7 +116,7 @@ class Widget {
 		bool isInRect(u8 x, u8 y, u8 x1, u8 y1, u8 x2, u8 y2);
 
 		// How wide is the string when rendered?
-		u8 getStringWidth(const char *str, u16 limit=USHRT_MAX);
+		u32 getStringWidth(const char *str, u16 limit=USHRT_MAX);
 
 		// Can the widget be seen by the user?
 		bool isExposed(void);
