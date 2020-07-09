@@ -526,11 +526,10 @@ void sampleChange(Sample *smp)
 
 void volEnvSetInst(Instrument *inst)
 {
-	if(inst == 0)
+	if(inst == NULL)
 	{
 		volenvedit->setZoomAndPos(0, 0);
 		volenvedit->setPoints(0, 0, 0);
-		volenvedit->pleaseDraw();
 	}
 	else
 	{
@@ -538,8 +537,11 @@ void volEnvSetInst(Instrument *inst)
 		u16 n = inst->getVolumeEnvelope(&xs, &ys);
 		volenvedit->setZoomAndPos(2, 0);
 		volenvedit->setPoints(xs, ys, n);
-		volenvedit->pleaseDraw();
 	}
+	btnenvdrawmode->set_enabled(inst != NULL);
+	btnaddenvpoint->set_enabled(inst != NULL);
+	btndelenvpoint->set_enabled(inst != NULL);
+	volenvedit->pleaseDraw();
 }
 
 void handleSampleChange(u16 newsample)
@@ -683,7 +685,7 @@ void setSong(Song *newsong)
 bool loadSample(const char *filename_with_path)
 {
 	const char *filename = strrchr(filename_with_path, '/') + 1;
-	iprintf("file: %s %s\n",filename_with_path, filename);
+	debugprintf("file: %s %s\n",filename_with_path, filename);
 
 	bool load_success;
 	Sample *newsmp = new Sample(filename_with_path, false, &load_success);
@@ -734,6 +736,38 @@ bool loadSample(const char *filename_with_path)
 	return true;
 }
 
+void loadVblankHandler(void)
+{
+	memoryiindicator->pleaseDraw();
+	memoryiindicator_disk->pleaseDraw();
+}
+
+void showSlowLoadOperation(std::function<const char*(void)> loadOp)
+{
+	SetYtrigger(191);
+	irqSet(IRQ_VCOUNT, loadVblankHandler);
+	irqEnable(IRQ_VCOUNT);
+
+	mb = new MessageBox(&sub_vram, "one moment", 0);
+	gui->registerOverlayWidget(mb, 0, SUB_SCREEN);
+	mb->show();
+	mb->pleaseDraw();
+
+	const char* res = loadOp();
+	DC_FlushAll();
+
+	deleteMessageBox();
+
+	irqDisable(IRQ_VCOUNT);
+	irqClear(IRQ_VCOUNT);
+
+	if (res != NULL)
+		showMessage(res, true);
+#ifdef DEBUG
+	PrintFreeMem();
+#endif
+}
+
 void handleLoad(void)
 {
 	// Debug function for fun and profit. Or is it?
@@ -742,52 +776,37 @@ void handleLoad(void)
 		return;
 	}
 
-	// Make the extension lowercase
-	char ext[4] = {0};
-	file->name.substr(file->name.length()-3,3).copy(ext, 3);
-	lowercase(ext);
-
-	if(strcmp(ext, ".xm")==0)
+	const char *fn = file->name.c_str();
+	
+	if(strcasecmp(fn + strlen(fn) - 3, ".xm")==0)
 	{
 		stopPlay();
 
 		delete song; // For christs sake do some checks before deleting the song!!
 		pv->unmuteAll();
 
-		mb = new MessageBox(&sub_vram, "one moment", 0);
-		gui->registerOverlayWidget(mb, 0, SUB_SCREEN);
-		mb->show();
-		mb->pleaseDraw();
-
-		Song *newsong;
-		u16 err;
-		err = xm_transport.load(file->name_with_path.c_str(), &newsong);
-
-		deleteMessageBox();
-
-		if(err) {
-			// Emergency: set up an empty song
-			newsong = new Song(10, 125);
-		}
-
-		setSong(newsong);
-
-		DC_FlushAll();
-
-		if(err)
-		{
-			showMessage(xm_transport.getError(err), true);
-			PrintFreeMem();
-		}
-
+		showSlowLoadOperation([file](){
+			Song *newsong;
+			u16 err;
+			err = xm_transport.load(file->name_with_path.c_str(), &newsong);
+			if (err)
+			{
+				setSong(new Song(10, 125));
+				return xm_transport.getError(err);
+			}
+			else
+			{
+				setSong(newsong);
+				return (const char*) NULL;
+			}
+		});
 	}
-	else if(strcmp(ext, "wav")==0)
+	else if(strcasecmp(fn + strlen(fn) - 4, ".wav")==0)
 	{
-		bool success = loadSample(file->name_with_path.c_str());
-
-		if(success == false) {
-			showMessage("wav loading failed", true);
-		}
+		showSlowLoadOperation([file](){
+			bool success = loadSample(file->name_with_path.c_str());
+			return !success ? "wav loading failed" : (const char*) NULL;
+		});
 	}
 
 	memoryiindicator_disk->pleaseDraw();
@@ -805,7 +824,7 @@ void saveFile(void)
 	strcpy(pathfilename, path);
 	strcpy(pathfilename+strlen(path), filename);
 
-	iprintf("saving %s ...\n", filename);
+	debugprintf("saving %s ...\n", filename);
 
 	mb = new MessageBox(&sub_vram, "one moment", 0);
 	gui->registerOverlayWidget(mb, 0, SUB_SCREEN);
@@ -826,7 +845,7 @@ void saveFile(void)
 
 	deleteMessageBox();
 
-	iprintf("done\n");
+	debugprintf("done\n");
 
 	free(pathfilename);
 
@@ -932,27 +951,28 @@ void handleTypewriterFilenameOk(void)
 {
 	char *text = tw->getText();
 	char *name = NULL;
-	iprintf("%s\n", text);
+	int textlen = strlen(text);
+	debugprintf("%s\n", text);
 	if(strcmp(text,"") != 0)
 	{
-		if( (rbsong->getActive() == true) && (strcmp(text+strlen(text)-3, ".xm") != 0) )
+		if( (rbsong->getActive() == true) && (strcasecmp(text+textlen-3, ".xm") != 0) )
 		{
 			// Append extension
-			name = (char*)malloc(strlen(text)+3+1);
+			name = (char*)malloc(+3+1);
 			strcpy(name,text);
-			strcpy(name+strlen(name),".xm");
+			strcpy(name+textlen,".xm");
 		}
-		else if( (rbsample->getActive() == true) && (strcmp(text+strlen(text)-4, ".wav") != 0) )
+		else if( (rbsample->getActive() == true) && (strcasecmp(text+textlen-4, ".wav") != 0) )
 		{
 			// Append extension
-			name = (char*)malloc(strlen(text)+4+1);
+			name = (char*)malloc(textlen+4+1);
 			strcpy(name,text);
-			strcpy(name+strlen(name),".wav");
+			strcpy(name+textlen,".wav");
 		}
 		else
 		{
 			// Leave as is
-			name = (char*)malloc(strlen(text)+1);
+			name = (char*)malloc(textlen+1);
 			strcpy(name,text);
 		}
 		labelFilename->setCaption(name);
@@ -1153,26 +1173,24 @@ void setRecordMode(bool is_on)
 	redraw_main_requested = false;
 	drawMainScreen(); // <- must redraw because of orange lines
 
-
 	// Draw border
 	u16 col;
+	u32 colcol;
 
 	if(is_on)
 		col = RGB15(31, 0, 0) | BIT(15); // red
 	else
 		col = settings->getTheme()->col_bg; // bg color
+	colcol = (col) | (col << 16);
 
-	for(u16 i=0; i<256; ++i)
-		sub_vram[i] = col;
+	dmaFillWords(colcol, sub_vram, 256 * 2);
+	dmaFillWords(colcol, sub_vram + (256*191), 256 * 2);
 
-	for(u16 i=0; i<256; ++i)
-		sub_vram[256*191+i] = col;
-
-	for(u8 i=0; i<192; ++i)
+	for(u8 i=1; i<191; ++i)
+	{
 		sub_vram[256*i] = col;
-
-	for(u8 i=0; i<192; ++i)
 		sub_vram[256*i+255] = col;
+	}
 }
 
 
@@ -1208,7 +1226,7 @@ void handleDSMWRecv(void)
 	{
 		if(state->dsmi_recv) {
 
-			iprintf("got sth\n");
+			debugprintf("got sth\n");
 
 			u8 type = message & 0xF0;
 			switch(type)
@@ -1218,7 +1236,7 @@ void handleDSMWRecv(void)
 					u8 note = data1;
 					u8 volume = data2 * 2;
 					u8 channel = 255;
-					iprintf("on %d %d\n", inst, note);
+					debugprintf("on %d %d\n", inst, note);
 					CommandPlayInst(inst, note, volume, channel);
 					break;
 				}
@@ -1534,7 +1552,7 @@ void handleNewRow(u16 row)
 
 			if(curr_cell->note == 254) // Note off
 			{
-				//iprintf("off c %u n %u\n", chn, curr_cell->note);
+				//debugprintf("off c %u n %u\n", chn, curr_cell->note);
 				dsmi_write(NOTE_OFF | dsmw_lastchannels[chn], dsmw_lastnotes[chn], 0);
 				dsmw_lastnotes[chn] = curr_cell->note;
 			}
@@ -1542,10 +1560,10 @@ void handleNewRow(u16 row)
 			{
 				// Turn the last note off
 				if(dsmw_lastnotes[chn] < 254) {
-					//iprintf("off c %u n %u\n", chn, curr_cell->note);
+					//debugprintf("off c %u n %u\n", chn, curr_cell->note);
 					dsmi_write(NOTE_OFF | dsmw_lastchannels[chn], dsmw_lastnotes[chn], 0);
 				}
-				//iprintf("on c %u n %u v %u\n", chn, curr_cell->note, curr_cell->volume / 2);
+				//debugprintf("on c %u n %u v %u\n", chn, curr_cell->note, curr_cell->volume / 2);
 				u8 midichannel = curr_cell->instrument % 16;
 				dsmi_write(NOTE_ON | midichannel, curr_cell->note, curr_cell->volume / 2);
 
@@ -1571,9 +1589,7 @@ void handleFileChange(File file)
 {
 	if(!file.is_dir)
 	{
-		char *str = (char*)malloc(file.name.length() + 1);
-		strcpy(str, file.name.c_str());
-		lowercase(str);
+		const char *str = file.name.c_str();
 		labelFilename->setCaption(str);
 
 		if(rbsong->getActive() == true)
@@ -1586,7 +1602,7 @@ void handleFileChange(File file)
 		}
 
 		// Preview wav files
-		if( (strcmp(&str[strlen(str)-3], "wav") == 0) && (settings->getSamplePreview() == true) )
+		if( (strcasecmp(&str[strlen(str)-4], ".wav") == 0) && (settings->getSamplePreview() == true) )
 		{
 			// Stop playing sample if necessary
 			CommandStopInst(0);
@@ -1594,14 +1610,15 @@ void handleFileChange(File file)
 			// Check if it's not too big
 			u32 smpsize = my_getFileSize(file.name_with_path.c_str());
 
+			// TODO: instead of this
 			u8* testptr = (u8*)malloc(smpsize); // Try to malloc it
 			if(testptr == 0)
 			{
-				iprintf("not enough ram for preview\n");
+				debugprintf("not enough ram for preview\n");
 			}
 			else
 			{
-				iprintf("previewing\n");
+				debugprintf("previewing\n");
 				free(testptr);
 
 				// Load sample
@@ -1635,8 +1652,6 @@ void handleFileChange(File file)
 				}
 			}
 		}
-
-		free(str);
 	}
 }
 
@@ -1654,7 +1669,7 @@ void handleDirChange(const char *newdir)
 
 void handlePreviewSampleFinished(void)
 {
-	iprintf("Sample finished\n");
+	debugprintf("Sample finished\n");
 	delete state->preview_sample;
 	state->preview_sample = 0;
 
@@ -2328,7 +2343,7 @@ void dsmiConnect(void)
 		showMessage("Sorry, couldn't connect.", true);
 		state->dsmi_connected = false;
 	} else {
-		iprintf("YAY, connected!\n");
+		debugprintf("YAY, connected!\n");
 		btndsmwtoggleconnect->setCaption("disconnect");
         btndsmwtoggleconnect->pleaseDraw();
         state->dsmi_connected = true;
@@ -3166,7 +3181,7 @@ void handleButtons(u16 buttons, u16 buttonsheld)
 	else if(buttons & KEY_START)
 	{
 #ifdef DEBUG
-		iprintf("\x1b[2J"); //was: consoleClear();
+		debugprintf("\x1b[2J");
 #else
 		if( (state->playing == false) || (state->pause == true) )
 			startPlay();
@@ -3301,7 +3316,7 @@ void fadeIn(void)
 #ifdef DEBUG
 void saveScreenshot(void)
 {
-	iprintf("Saving screenshot\n");
+	debugprintf("Saving screenshot\n");
 	u8 *screenbuf = (u8*)malloc(256*192*3*2);
 	u8 *screenptr = screenbuf;
 
@@ -3333,7 +3348,7 @@ void saveScreenshot(void)
 	fclose(fileh);
 
 	free(screenbuf);
-	iprintf("saved\n");
+	debugprintf("saved\n");
 
 	filenr++;
 }
@@ -3351,14 +3366,14 @@ void dumpSample(void)
 	void *data = smp->getData();
 	u32 size = smp->getSize();
 
-	iprintf("saving sample\n");
+	debugprintf("saving sample\n");
 
 	FILE *fileh;
 	fileh = fopen(filename, "w");
 	fwrite(data, size, 1, fileh);
 	fclose(fileh);
 
-	iprintf("saved\n");
+	debugprintf("saved\n");
 }
 #endif
 
@@ -3461,8 +3476,6 @@ int main(int argc, char **argv) {
 	// Clear tile mem
 	dmaFillWords(0, BG_BMP_RAM_SUB(0), 32*1024);
 
-	irqEnable(IRQ_VBLANK);
-
 #ifdef USE_FAT
 	bool fat_success = fatInitDefault();
 #else
@@ -3510,6 +3523,8 @@ int main(int argc, char **argv) {
 	action_buffer->register_change_callback(actionBufferChangeCallback);
 
 	applySettings();
+	setSong(song);
+
 #ifndef DEBUG
 	fadeIn();
 #endif
@@ -3520,7 +3535,7 @@ int main(int argc, char **argv) {
 #endif
 
 #ifdef DEBUG
-	iprintf("NitroTracker debug build.\nBuilt %s %s\n<Start> clears messages.\n", __DATE__, __TIME__);
+	debugprintf("NitroTracker debug build.\nBuilt %s %s\n<Start> clears messages.\n", __DATE__, __TIME__);
 #endif
 
 	while(!exit_requested)

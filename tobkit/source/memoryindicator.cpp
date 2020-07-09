@@ -29,7 +29,8 @@ MemoryIndicator::~MemoryIndicator()
 // Drawing request
 void MemoryIndicator::pleaseDraw(void)
 {
-	draw();
+	if (isExposed())
+		draw();
 }
 
 /* ===================== PRIVATE ===================== */
@@ -40,6 +41,9 @@ void MemoryIndicator::pleaseDraw(void)
 
 void MemoryIndicator::draw(void)
 {
+	if (!isExposed())
+		return;
+
 	u32 free_ram = getFreeMem();
 	u32 used_ram = total_ram - free_ram;
 	

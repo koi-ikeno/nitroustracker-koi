@@ -175,7 +175,7 @@ bool Settings::write(void)
 	FILE *conf = fopen(configpath, "w");
 	if(conf == NULL)
 	{
-		iprintf("error opening config for writing\n");
+		debugprintf("error opening config for writing\n");
 		return false;
 	}
 
@@ -270,7 +270,7 @@ bool Settings::getConfigValue(char *config, const char *attribute, char *value, 
 	strncpy(value, valstart, len);
 	value[len] = 0;
 
-	//iprintf("'%s' : '%s'\n", attribute, value);
+	//debugprintf("'%s' : '%s'\n", attribute, value);
 
 	return true;
 }
