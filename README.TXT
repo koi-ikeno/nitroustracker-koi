@@ -1,6 +1,6 @@
 
-     Nitrotracker v0.4
-     -----------------  by 0xtob ^ 0x80
+     NitroTracker-unofficial
+     -----------------------
 
 -- About
 
@@ -12,20 +12,18 @@ supports the popular XM file format that is used by many
 PC trackers and that can be played on many PC audio
 players such as Winamp or XMMS.
 
+NitroTracker-unofficial is a fork of the project, whose
+goal is to improve the usability of the tracker, 12 years
+since its final official release.
+
 -- Installation
 
-Patch NitroTracker.nds with the DLDI patch for your card.
-(Please refer to the documentation for more info on this.)
-Then, copy NitroTracker and some music and samples to
+Copy NitroTracker and some music and samples to
 any folder of your memory card and start tracking!
 
--- Documentation
+-- Community
 
-You will probably need it. It's on the ...
-
--- Homepage and Forum
-
-    http://nitrotracker.tobw.net
+Forum:
 
     http://modarchive.org/forums/index.php?board=79.0
 
@@ -43,32 +41,42 @@ What you can do:
 
         Bug reports and feature requests are collected here:
 
-        http://code.google.com/p/nitrotracker/issues/list
+        https://github.com/asiekierka/nitrotracker/issues
 
         If you have something that isn't already on that list, feel
         free to add it.
+
+        Keep in mind that many reported requests remain preserved
+        on the old issue tracker, now at:
+
+        https://github.com/0xtob/nitrotracker/issues
 
     Become a NitroTracker developer!
 
         The source and all the info on how to get started is here:
 
-        http://code.google.com/p/nitrotracker/
+        https://github.coma/asiekierka/nitrotracker
 
-        If you want to contribute a patch or even become a regular
-        developer, just drop an e-mail to me@nitrotracker.tobw.net .
+        If you want to contribute a pull request, go right ahead!
 
 -- Contact
 
 Get in touch with other NitroTracker users in the official
 The NitroTracker Forum (see above).
 
-You can also directly contact me via:
-
-    * IRC: #nitrotracker on Espernet or #dsdev on Blitzed
-      (look for _0xtob)
-    * e-Mail: me@nitrotracker.tobw.net
-
 -- Thanks
+
+Big thanks to 0xtob for the work on NitroTracker and for
+making it available under a free software license.
+
+I'd also like to thank reinvdwoerd for their original
+work and ideas regarding improving NitroTracker, started
+shortly prior to my own work!
+
+Finally, as always, the devkitPro group members - without
+their tireless work, all of this would be a lot harder.
+
+0xtob thanks:
 
 There is quite a bunch of people that made the development
 of this project possible or easier. First of all, a huge
@@ -86,7 +94,7 @@ who work on DS homebrew mostly in their spare time. This
 list is by nomeans comprehensive, so please don't sue me
 if you are missing your name here :-)
 
-    * joat, dovoto and WinterMute for libnds and DevkitPro
+    * joat, dovoto and WinterMute for libnds and devkitPro
     * chishm for the universal FAT library
     * sgstair for the incredible wifi lib
     * Headspin for the great on-screen typewriter design

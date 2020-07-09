@@ -1,0 +1,182 @@
+-- v0.4.1-beta (2020-07-09)
+
+New features:
+
+- full DSi/3DS support
+  - improved CPU/RAM specifications
+  - support for built-in SD card reader
+  - support for built-in microphone (with 16-bit samples)
+- undo/redo buffer
+  - use undo and redo buttons in the UI to prevent mistakes
+  - currently limited to pattern operations (no order table/sample/instrument)
+- untested DS Easy Piano peripheral support
+- it is now possible to exit NitroTracker by tapping on the logo and selecting
+  "exit" -> "yes"
+
+Improvements:
+
+- pattern viewer:
+  - new, more readable 3x5 font
+  - slight tweak to font colors for better readability
+  - selections are now visible behind current row highlight
+- pattern editing:
+  - ins/del/clr/--/vol now operate on selections in addition to single cells
+- piano:
+  - added the ability to slide your stylus on the keyboard (@reinvdwoerd)
+- "stop" immediately jumps back to top of pattern (@reinvdwoerd)
+- NitroTracker now starts in the directory it's launched from
+- the "disk" tab is now only shown if a filesystem has been detected
+- the memory indicator is now dynamically updated as a .XM/.WAV file is
+  being loaded
+- the config is now saved explicitly as opposed to automatically, to reduce
+  SD card wear and improve UI performance
+- major performance improvements to tobkit (widget drawing library)
+- minor performance improvements in other areas
+- minor visual tweaks
+- better mechanisms for checking free RAM
+
+Fixes:
+
+- settings now work even without a filesystem (@0xtob)
+- fixed file browser crashing after deleting a folder (@0xtob)
+- slight improvements to executable size
+- fixed many memory leaks (including fixes by @fincs)
+- updated to devkitARM r54, libnds 1.8.0
+
+There may have been further changes, made between July 2008 and April 2010,
+which are unfortunately not fully recorded in this changelog.
+
+The following changelog entries are based off the archived blog posts from the
+original website, http://nitrotracker.tobw.net/.
+
+-- v0.4 (2008-07-10)
+
+New features:
+
+- Loops
+- Volume Envelopes (drawable)
+- Multi-Sample Instruments
+- Channel Mute / Solo
+
+Improvements:
+
+- .WAV saving
+- free RAM indicator
+- sample preview
+- the file browser remembers recent folders and files
+- hands-free recording (push B in the record dialog)
+- improved .XM player
+- volume column editing
+- sample panning
+- improved left-handed mode
+
+-- v0.3 (2007-01-05)
+
+New features:
+
+- DSMIDIWiFi support
+- the song restart position can now be set
+- .WAV preview in the file selector
+- pause/resume
+- pattern looping
+
+Improvements:
+
+- reboot console (press START+SELECT)
+- some nice icons :-)
+- shrinking the pattern cannot destroy data any more
+  if you accidentally make a pattern too small, you can just enlarge it again
+  and your data is still there.
+- speed can now be adjusted while playing
+- newer touch code => better touchscreen accuracy
+- the "clr" button is now on both screens
+- lines between all rows for better orientation
+- record mode is more obvious (red border)
+- application icon
+
+Fixes:
+
+- relnote/finetune calculation for .WAVs works again
+- 8-bit .WAVs are now loaded correctly, without corruption
+- stereo samples are now downsampled to mono
+- better filesystem support
+- .ds.gba version included
+- fading no longer causes corruption on longer samples
+- "ins" is now 100% stable
+- updated to devkitARM r19b
+
+-- v0.2 (2006-07-04)
+
+New features:
+
+- sample settings:
+  - volume
+  - relative note
+  - finetune
+- a basic sample editor that has:
+  - selection with stylus
+  - fading
+  - reverse
+  - delete
+  - normalize
+
+Fixes:
+
+- loading of .WAVs with low sampling frequencies now works
+- less memory usage while loading
+- better sample drawing code
+
+-- v0.1.4 (2006-04-16)
+
+New features:
+
+- added a "cln" button that clones the current pattern
+- column selection: make a selection over the columns you want to select and
+  press the "sel" button. this expands the selection to the complete column(s).
+  without an active selection, the column under the cursor is selected.
+- live recording: press play in record mode and play
+- added del and ins buttons to the pattern screen
+- removed the del button from the keyboard
+- new settings tab
+- left-handed mode (D-Pad swapped with ABXY and LR swapped)
+- in list boxes, clicking below/above the "scroll thingy" scrolls down/up
+  one page
+- you can now tap on the song name / filename to change the name
+- you now have to touch the splash screen
+
+Fixes:
+
+- improved filesystem device support
+- updated to devkitARM r18
+- fixed .WAV loading
+- fixed strange looping behaviour
+- list indices are now in hex, to be consistent with the instrument column
+  in the pattern view and with FT2 :-)
+
+-- v0.1.3 (2006-04-02)
+
+Improvements:
+
+- shoulder button functions: L switches screens / R + (up|down) scrolls to the (top|bottom)
+- added a second splash screen
+
+Fixes:
+
+- several critical fixes in loading and saving
+- reduced sample corruption
+- fixed a looping problem that caused samples to repeat themselves at a higher pitch
+- updated libnds => improved touch code, fixed touch precision problems
+- recording works without a filesystem device
+- ".Xm" and ".xM" files can now be loaded
+
+-- v0.1.2 (2006-03-23)
+
+- published .gba.nds version
+
+-- v0.1.1 (2006-03-21)
+
+- updated FAT library
+
+-- v0.1 (2006-03-20)
+
+Initial release.
