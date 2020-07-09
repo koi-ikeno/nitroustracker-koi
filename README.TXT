@@ -55,7 +55,7 @@ What you can do:
 
         The source and all the info on how to get started is here:
 
-        https://github.coma/asiekierka/nitrotracker
+        https://github.com/asiekierka/nitrotracker
 
         If you want to contribute a pull request, go right ahead!
 
