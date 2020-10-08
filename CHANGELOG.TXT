@@ -1,3 +1,9 @@
+-- WIP
+
+New features:
+
+- in-tracker file deletion support (#5)
+
 -- v0.4.1-beta (2020-07-09)
 
 New features:

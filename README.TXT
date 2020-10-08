@@ -31,12 +31,6 @@ Forum:
 
 What you can do:
 
-    Beta test!
-
-        Beta testers get access to early versions of the tracker
-        in exchange for constructive criticism. If you want to
-        be a beta tester, send an e-mail to me@nitrotracker.tobw.net
-
     Find bugs and request features!
 
         Bug reports and feature requests are collected here:
