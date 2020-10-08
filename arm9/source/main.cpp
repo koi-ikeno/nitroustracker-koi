@@ -158,7 +158,7 @@ GUI *gui;
 	Label *labelitem, *labelFilename, *labelramusage_disk;
 	RadioButton *rbsong, *rbsample, *rbinst;
 	RadioButton::RadioButtonGroup *rbgdiskop;
-	Button *buttonsave, *buttonload, *buttonchangefilename;
+	Button *buttonsave, *buttonload, *buttondelfile, *buttonchangefilename;
 	FileSelector *fileselector;
 	MemoryIndicator *memoryiindicator_disk;
 	CheckBox *cbsamplepreview;
@@ -484,6 +484,18 @@ void updateSampleList(Instrument *inst)
 	}
 }
 
+void updateMemoryState(void)
+{
+	memoryiindicator->pleaseDraw();
+	memoryiindicator_disk->pleaseDraw();
+}
+
+void updateFilesystemState(void)
+{
+	fileselector->invalidateFileList();
+	fileselector->pleaseDraw();
+}
+
 void sampleChange(Sample *smp)
 {
 	if(smp == NULL)
@@ -736,16 +748,10 @@ bool loadSample(const char *filename_with_path)
 	return true;
 }
 
-void loadVblankHandler(void)
-{
-	memoryiindicator->pleaseDraw();
-	memoryiindicator_disk->pleaseDraw();
-}
-
 void showSlowLoadOperation(std::function<const char*(void)> loadOp)
 {
 	SetYtrigger(191);
-	irqSet(IRQ_VCOUNT, loadVblankHandler);
+	irqSet(IRQ_VCOUNT, updateMemoryState);
 	irqEnable(IRQ_VCOUNT);
 
 	mb = new MessageBox(&sub_vram, "one moment", 0);
@@ -768,9 +774,40 @@ void showSlowLoadOperation(std::function<const char*(void)> loadOp)
 #endif
 }
 
+void handleDelfileConfirmed(void)
+{
+	deleteMessageBox();
+
+	File *file = fileselector->getSelectedFile();
+	debugprintf("%s\n", file->name_with_path.c_str());
+	if((file==0)||(file->is_dir == true)) {
+		return;
+	}
+
+	const char *fn = file->name_with_path.c_str();
+	if (unlink(fn)) {
+		showMessage("error deleting file", true);
+	}
+
+	updateFilesystemState();
+}
+
+void handleDelfile(void)
+{
+	File *file = fileselector->getSelectedFile();
+	debugprintf("%s\n", file->name_with_path.c_str());
+	if((file==0)||(file->is_dir == true)) {
+		return;
+	}
+
+	mb = new MessageBox(&sub_vram, "are you sure?", 2, "yes", handleDelfileConfirmed, "no", deleteMessageBox);
+	gui->registerOverlayWidget(mb, 0, SUB_SCREEN);
+	mb->reveal();
+	mb->pleaseDraw();
+}
+
 void handleLoad(void)
 {
-	// Debug function for fun and profit. Or is it?
 	File *file = fileselector->getSelectedFile();
 	if((file==0)||(file->is_dir == true)) {
 		return;
@@ -809,7 +846,7 @@ void handleLoad(void)
 		});
 	}
 
-	memoryiindicator_disk->pleaseDraw();
+	updateMemoryState();
 }
 
 // Reads filename and path from fileselector and saves the file
@@ -844,6 +881,7 @@ void saveFile(void)
 	}
 
 	deleteMessageBox();
+	updateFilesystemState();
 
 	debugprintf("done\n");
 
@@ -906,7 +944,7 @@ void handleSave(void)
 	}
 
 	free(pathfilename);
-
+	updateMemoryState();
 }
 
 
@@ -935,6 +973,8 @@ void handleDiskOPChangeFileType(u8 newidx)
 	{
 		fileselector->selectFilter("instrument");
 	}
+
+	fileselector->pleaseDraw();
 }
 
 
@@ -1481,7 +1521,7 @@ void zapPatterns(void)
 	drawMainScreen();
 
 	CommandSetSong(song);
-	memoryiindicator->pleaseDraw();
+	updateMemoryState();
 }
 
 void zapInstruments(void)
@@ -1504,16 +1544,14 @@ void zapInstruments(void)
 	sampledisplay->setSample(0);
 
 	CommandSetSong(song);
-
-	memoryiindicator->pleaseDraw();
+	updateMemoryState();
 }
 
 void zapSong(void) {
-
 	deleteMessageBox();
 	delete song;
 	setSong(new Song());
-	memoryiindicator->pleaseDraw();
+	updateMemoryState();
 }
 
 void handleZap(void)
@@ -1645,7 +1683,7 @@ void handleFileChange(File file)
 					DC_FlushAll();
 					CommandPlaySample(smp, 4*12, 255, 0);
 
-					memoryiindicator_disk->pleaseDraw();
+					updateMemoryState();
 
 					// When the sample has finished playing, the arm7 sends a signal,
 					// so the arm9 can delete the sampleb
@@ -1673,7 +1711,7 @@ void handlePreviewSampleFinished(void)
 	delete state->preview_sample;
 	state->preview_sample = 0;
 
-	memoryiindicator_disk->pleaseDraw();
+	updateMemoryState();
 }
 
 void setNoteVol(u16 vol)
@@ -2565,22 +2603,26 @@ void setupGUI(bool dldi_enabled)
 
 		rbgdiskop->registerChangeCallback(handleDiskOPChangeFileType);
 
-		memoryiindicator_disk = new MemoryIndicator(3, 52, 34, 8, &sub_vram, true);
+		memoryiindicator_disk = new MemoryIndicator(3, 51, 34, 8, &sub_vram, true);
 
-		labelramusage_disk = new Label(8, 60, 34, 10, &sub_vram, false);
+		labelramusage_disk = new Label(8, 59, 34, 10, &sub_vram, false);
 		labelramusage_disk->setCaption("ram");
 
-		cbsamplepreview = new CheckBox(4, 71, 34, 14, &sub_vram, false, true);
+		cbsamplepreview = new CheckBox(4, 70, 34, 14, &sub_vram, false, true);
 		cbsamplepreview->setCaption("pre");
 		cbsamplepreview->registerToggleCallback(handleSamplePreviewToggled);
 
-		buttonload = new Button(3 , 102, 34, 14, &sub_vram);
+		buttonload = new Button(3, 86, 34, 14, &sub_vram);
 		buttonload->setCaption("load");
 		buttonload->registerPushCallback(handleLoad);
 
-		buttonsave = new Button(3 , 118, 34, 14, &sub_vram);
+		buttonsave = new Button(3, 102, 34, 14, &sub_vram);
 		buttonsave->setCaption("save");
 		buttonsave->registerPushCallback(handleSave);
+
+		buttondelfile = new Button(3, 118, 34, 14, &sub_vram);
+		buttondelfile->setCaption("del");
+		buttondelfile->registerPushCallback(handleDelfile);
 
 		labelFilename = new Label(3, 134, 110, 14, &sub_vram);
 		labelFilename->setCaption("");
@@ -2599,6 +2641,7 @@ void setupGUI(bool dldi_enabled)
 		tabbox->registerWidget(memoryiindicator_disk, 0, 1);
 		tabbox->registerWidget(labelramusage_disk, 0, 1);
 		tabbox->registerWidget(cbsamplepreview, 0, 1);
+		tabbox->registerWidget(buttondelfile, 0, 1);
 		tabbox->registerWidget(buttonsave, 0, 1);
 		tabbox->registerWidget(buttonload, 0, 1);
 		tabbox->registerWidget(labelFilename, 0, 1);
@@ -3399,6 +3442,8 @@ void applySettings(void)
 	{
 		fileselector->setDir(settings->getSamplePath());
 	}
+
+	fileselector->pleaseDraw();
 }
 
 //---------------------------------------------------------------------------------

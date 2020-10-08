@@ -26,8 +26,11 @@ class FileSelector: public ListBox {
 		void penDown(u8 px, u8 py);
 	
 		// Drawing request
-		void pleaseDraw(void);	
-	
+		void pleaseDraw(void);
+
+		// File list invalidation
+		void invalidateFileList(void);
+
 		// Sets the file select callback
 		void registerFileSelectCallback(void (*onFileSelect_)(File));
 		
@@ -49,6 +52,9 @@ class FileSelector: public ListBox {
 		// Set current dir
 		void setDir(std::string dir);
 	
+	protected:
+		void draw(void);
+
 	private:
 		// Helper for converting a string to lowercase
 		//void lowercase(char *str);
@@ -66,6 +72,11 @@ class FileSelector: public ListBox {
 		void (*onDirChange)(const char *newdir);
 		
 		std::vector<File> filelist; // Files that are displayed
+		bool filelist_refresh; // Request refresh for file list
+
+		// Hack! ListBox::penDown calls draw(), which we capture and perform later.
+		bool ignore_draws;
+		bool parent_requested_draw;
 };
 
 #endif

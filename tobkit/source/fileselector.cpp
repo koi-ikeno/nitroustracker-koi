@@ -13,20 +13,12 @@
 
 #include "tobkit/fileselector.h"
 
-//#include "tools.h"
-
-// TODO:
-/*
-on pendown, this thing is actually drawn twice. the first draw is done
-by ListBox::penDown(px, py);, the second draw from the end of read_directory().
-Make this only one draw. Frameskips are at stake!
-*/
-
 /* ===================== PUBLIC ===================== */
 
 FileSelector::FileSelector(u8 _x, u8 _y, u8 _width, u8 _height, uint16 **_vram, bool visible)
 	:ListBox(_x, _y, _width, _height, _vram, 0, false, visible),
-	current_directory("/"), active_filterset("")
+	current_directory("/"), active_filterset(""), filelist_refresh(true),
+	ignore_draws(false), parent_requested_draw(false)
 {
 	onFileSelect = 0;
 	onDirChange  = 0;
@@ -34,54 +26,74 @@ FileSelector::FileSelector(u8 _x, u8 _y, u8 _width, u8 _height, uint16 **_vram, 
 
 // Drawing request
 void FileSelector::pleaseDraw(void) {
-	read_directory();
+	if(filelist_refresh) {
+		read_directory();
+		filelist_refresh = false;
+	}
+	ListBox::pleaseDraw();
+}
+
+// File list invalidation request
+void FileSelector::invalidateFileList(void) {
+	filelist_refresh = true;
 }
 
 // Calls fileselect callback or changes the directory
 void FileSelector::penDown(u8 px, u8 py)
 {
+	bool touched_entry = true;
+
+	ignore_draws = true;
 	ListBox::penDown(px, py);
+	ignore_draws = false;
 
 	// Don't do anything if the scrollthingy is touched!
 	u8 relx = px-x;
 	if(relx>=width-SCROLLBAR_WIDTH) {
-		return;
+		touched_entry = false;
 	}
 
 	// Quit if an out of range element was tapped
-	if(activeelement>=elements.size()) return;
+	if(activeelement>=elements.size()) touched_entry = false;
 
-	// If it is a dir, enter it
-	if((filelist.at(activeelement).is_dir == true)&&(filelist.at(activeelement).name != "..")) {
-		//iprintf("element %u\n",activeelement);
-		current_directory += filelist.at(activeelement).name + "/";
-		//iprintf("newdir: %s\n",current_directory.c_str());
-		activeelement = 0;
+	if(touched_entry) {
+		// If it is a dir, enter it
+		if((filelist.at(activeelement).is_dir == true)&&(filelist.at(activeelement).name != "..")) {
+			//iprintf("element %u\n",activeelement);
+			current_directory += filelist.at(activeelement).name + "/";
+			//iprintf("newdir: %s\n",current_directory.c_str());
+			activeelement = 0;
 
-		if(onDirChange != NULL) {
-			onDirChange(current_directory.c_str());
+			if(onDirChange != NULL) {
+				onDirChange(current_directory.c_str());
+			}
+
+			invalidateFileList();
+
+		// If it is "..", go down a directory
+		} else if(filelist.at(activeelement).name == "..") {
+			std::string name = current_directory;
+			u8 slashpos = name.find_last_of("/", name.length()-2);
+			name.erase(slashpos, name.length()-slashpos-1);
+			current_directory = name;
+			//iprintf("%s\n",current_directory.c_str());
+			activeelement = 0;
+
+			if(onDirChange != NULL) {
+				onDirChange(current_directory.c_str());
+			}
+
+			invalidateFileList();
+
+		// If it is a file, call the callback
+		} else if(onFileSelect != 0) {
+			onFileSelect(filelist.at(activeelement));
 		}
+	}
 
-		read_directory();
-
-	// If it is "..", go down a directory
-	} else if(filelist.at(activeelement).name == "..") {
-		std::string name = current_directory;
-		u8 slashpos = name.find_last_of("/", name.length()-2);
-		name.erase(slashpos, name.length()-slashpos-1);
-		current_directory = name;
-		//iprintf("%s\n",current_directory.c_str());
-		activeelement = 0;
-
-		if(onDirChange != NULL) {
-			onDirChange(current_directory.c_str());
-		}
-
-		read_directory();
-
-	// If it is a file, call the callback
-	} else if(onFileSelect != 0) {
-		onFileSelect(filelist.at(activeelement));
+	if (parent_requested_draw || filelist_refresh) {
+		pleaseDraw();
+		parent_requested_draw = false;
 	}
 }
 
@@ -103,9 +115,7 @@ void FileSelector::addFilter(std::string filtername, std::vector<std::string> ex
 		active_filterset = filtername;
 	}
 
-	if(isExposed()) {
-		read_directory();
-	}
+	invalidateFileList();
 }
 
 // Selects a filter rule and upates view
@@ -113,9 +123,7 @@ void FileSelector::selectFilter(std::string filtername)
 {
 	active_filterset = filtername;
 
-	if(isExposed()) {
-		read_directory();
-	}
+	invalidateFileList();
 }
 
 // Get pointer to the selcted file, 0 is no file selected
@@ -141,6 +149,17 @@ std::string FileSelector::getDir(void) {
 void FileSelector::setDir(std::string dir)
 {
 	current_directory = dir;
+}
+
+/* ===================== PROTECTED ===================== */
+
+void FileSelector::draw(void)
+{
+	if(!ignore_draws) {
+		ListBox::draw();
+	} else {
+		parent_requested_draw = true;
+	}
 }
 
 /* ===================== PRIVATE ===================== */
@@ -284,6 +303,4 @@ void FileSelector::read_directory(void)
 		elements.push_back(filename);
 	}
 	free(filename);
-	calcScrollThingy();
-	draw();
 }
