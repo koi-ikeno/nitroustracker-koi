@@ -306,7 +306,7 @@ void PatternView::draw(void)
 			&&	(sel_screen_y2 >= PV_CURSORBAR_Y + 1 + PV_CELL_HEIGHT-1)
 			&&	(sel_screen_x1 <= getEffectiveWidth())
 			&&	(sel_screen_x2 >= PV_BORDER_WIDTH)) {
-				s32 cursor_highlight_x1 = max(sel_screen_x1, PV_BORDER_WIDTH + 1);
+				s32 cursor_highlight_x1 = std::max((int) sel_screen_x1, PV_BORDER_WIDTH + 1);
 				drawFullBox(cursor_highlight_x1, PV_CURSORBAR_Y+1, sel_screen_x2 - cursor_highlight_x1 - 1, PV_CELL_HEIGHT-1, cb_sel_highlight);
 		}
 	}
@@ -344,14 +344,13 @@ void PatternView::draw(void)
 	}
 	
 	// Channel indices
-	char *numberstr = (char*) malloc(3);
+	char numberstr[3];
 	for(u16 i=0;i<getNumVisibleChannels();++i)
 	{
 		drawFullBox(PV_BORDER_WIDTH+i*getCellWidth()+1, 1, 14, 11, col_bg);
-		snprintf(numberstr, 3, "%-2x", (u8) (hscrollpos+i));
+		sniprintf(numberstr, sizeof(numberstr), "%-2x", (u8) (hscrollpos+i));
 		drawString(numberstr, PV_BORDER_WIDTH+i*getCellWidth()+1, 1, 255, col_lines);
 	}
-	free(numberstr);
 	
 	// Mute / Solo buttons
 	u16 mute_col1, mute_col2, solo_col1, solo_col2;

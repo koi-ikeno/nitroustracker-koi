@@ -12,7 +12,7 @@ Label::Label(u8 _x, u8 _y, u8 _width, u8 _height, uint16 **_vram, bool _has_bord
 	:Widget(_x, _y, _width, _height, _vram),
 	onPush(0), caption(0), has_border(_has_border), is_albino(_albino), no_bg(_no_bg)
 {
-	caption = (char*)calloc(1, 1);
+
 }
 
 Label::~Label(void)

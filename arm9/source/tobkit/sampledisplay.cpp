@@ -30,9 +30,6 @@
 #include "ntxm/ntxmtools.h"
 #include "../tools.h"
 
-#define MIN(x,y)	((x)<(y)?(x):(y))
-#define MAX(x,y)	((x)>(y)?(x):(y))
-
 /* ===================== PUBLIC ===================== */
 
 // Constructor sets base variables
@@ -67,13 +64,13 @@ void SampleDisplay::penDown(u8 px, u8 py)
 		u32 loop_start_pos = sampleToPixel(smp->getLoopStart());//smp->getLoopStart() * (width-2) / smp->getNSamples();
 		u32 loop_end_pos   = sampleToPixel(smp->getLoopStart() + smp->getLoopLength());//(smp->getLoopStart() + smp->getLoopLength()) * (width-2) / smp->getNSamples();
 
-		if(isInRect(px-x, py-y, MAX(0, (s32)loop_start_pos - (s32)LOOP_TRIANGLE_SIZE), DRAW_HEIGHT+2-LOOP_TRIANGLE_SIZE,
+		if(isInRect(px-x, py-y, std::max((s32)0, (s32)loop_start_pos - (s32)LOOP_TRIANGLE_SIZE), DRAW_HEIGHT+2-LOOP_TRIANGLE_SIZE,
 			loop_start_pos+LOOP_TRIANGLE_SIZE, DRAW_HEIGHT+2))
 		{
 			pen_on_loop_start_point = true;
 			loop_touch_offset = px-x-1 - loop_start_pos;
 		}
-		else if(isInRect(px-x, py-y, MAX(0, (s32)loop_end_pos - (s32)LOOP_TRIANGLE_SIZE), 0,
+		else if(isInRect(px-x, py-y, std::max((s32)0, (s32)loop_end_pos - (s32)LOOP_TRIANGLE_SIZE), 0,
 			loop_end_pos+LOOP_TRIANGLE_SIZE, LOOP_TRIANGLE_SIZE))
 		{
 			pen_on_loop_end_point = true;
@@ -165,7 +162,7 @@ void SampleDisplay::penMove(u8 px, u8 py)
 	if(pen_on_loop_start_point) {
 		s32 olstart = smp->getLoopStart();
 		s32 newstart = pixelToSample((s32)px-(s32)x-1-(s32)loop_touch_offset);
-		smp->setLoopStartAndLength(newstart, MAX(0, (s32)smp->getLoopLength() - (newstart - olstart)));
+		smp->setLoopStartAndLength(newstart, std::max((s32)0, (s32)smp->getLoopLength() - (newstart - olstart)));
 		DC_FlushAll();
 	}
 	else if(pen_on_loop_end_point) {
@@ -406,8 +403,8 @@ void SampleDisplay::draw(void)
 	//
 	// Selection
 	//
-	s32 selleft = sampleToPixel(MIN(selstart, selend));
-	s32 selwidth = sampleToPixel(MAX(selstart, selend)) - selleft;
+	s32 selleft = sampleToPixel(std::min(selstart, selend));
+	s32 selwidth = sampleToPixel(std::max(selstart, selend)) - selleft;
 	bool dontdraw = false;
 
 	if( (selleft >= 0) && (selleft < width-2) && (selleft + selwidth > width - 2) ) {
@@ -489,7 +486,7 @@ void SampleDisplay::draw(void)
 	int32 step = divf32(inttof32(smp->getNSamples() >> zoom_level), inttof32(width-2));
 	int32 pos = 0;
 
-	u32 renderwindow = (u32)MAX(1, MIN(100, ceil_f32toint(step)));
+	u32 renderwindow = (u32)std::max(1, std::min(100, (int) ceil_f32toint(step)));
 
 	u16 middle = (DRAW_HEIGHT+2)/2;//-1;
 
@@ -731,7 +728,7 @@ void SampleDisplay::zoomOut(void)
 	zoom_level--;
 	calcScrollThingy();
 	s32 scrollpostmp = ((s32)scrollpos * 2 - (width - 2)) / 4;
-	scrollpos = max(0, scrollpostmp);
+	scrollpos = std::max(0, (int)scrollpostmp);
 	scroll(scrollpos);
 
 	/*
@@ -749,7 +746,7 @@ void SampleDisplay::zoomOut(void)
 
 u32 SampleDisplay::pixelToSample(s32 pixel)
 {
-	pixel=MAX(0,MIN(width-2,pixel));
+	pixel=std::max(0,std::min(width-2,(int)pixel));
 	u64 abspos = scrollpos + pixel;
 	return u32( abspos * smp->getNSamples() / ( u64(width-2)<<zoom_level ) );
 }

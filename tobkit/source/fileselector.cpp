@@ -222,7 +222,7 @@ void FileSelector::read_directory(void)
 		return;
 	}
 
-	char *filename = (char*)malloc(PATH_MAX);
+	char filename[PATH_MAX];
 	while(direntry != NULL)
 	{
 		if(direntry->d_name[0] != '.') { // Hidden and boring files
@@ -247,7 +247,6 @@ void FileSelector::read_directory(void)
 	}
 
 	closedir(dir);
-	free(filename);
 	// Apply filter if there is one
 	if(active_filterset != "") {
 		std::vector<File> newfilelist;
@@ -292,7 +291,6 @@ void FileSelector::read_directory(void)
 	activeelement = 0;
 	scrollpos = 0;
 
-	filename = (char*) calloc(1, 256);
 	std::string newentry;
 	for(u16 i=0;i<filelist.size();++i) {
 		newentry = filelist.at(i).name;
@@ -302,5 +300,4 @@ void FileSelector::read_directory(void)
 		strncpy(filename, newentry.c_str(), 255);
 		elements.push_back(filename);
 	}
-	free(filename);
 }

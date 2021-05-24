@@ -66,8 +66,8 @@ void CellArray::copy(Cell** ptn, int x1, int y1)
 
 void CellArray::paste(Cell **ptn, int width, int height, int x1, int y1)
 {
-    int x2 = min(width, x1 + array_width);
-    int y2 = min(height, y1 + array_height);
+    int x2 = std::min(width, x1 + array_width);
+    int y2 = std::min(height, y1 + array_height);
 
     Cell *src = array;
 

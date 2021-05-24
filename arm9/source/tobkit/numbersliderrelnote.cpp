@@ -159,10 +159,9 @@ void NumberSliderRelNote::draw(void)
 		case(11): nstr = "h-"; break;
 	}
 	
-	char *notestr = (char*)malloc(4);
-	sprintf(notestr, "%s%u", nstr, octave);
+	char notestr[4];
+	sniprintf(notestr, sizeof(notestr), "%s%u", nstr, octave);
 	drawString(notestr, 10, 5);
-	free(notestr);
 	
 	// Border
 	drawBorder();

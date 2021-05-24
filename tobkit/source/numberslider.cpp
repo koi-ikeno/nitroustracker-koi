@@ -160,15 +160,9 @@ void NumberSlider::draw(void)
 	
 	// Number display
 	drawFullBox(9,1,width-10,height-2,theme->col_lighter_bg);
-	char *numberstr = (char*)malloc(4);
-
-	if(hex==true) {
-		snprintf(numberstr, 4, "%2lx", value);
-	} else {
-		snprintf(numberstr, 4, "%3ld", value);
-	}
+	char numberstr[4];
+	sniprintf(numberstr, sizeof(numberstr), hex ? "%2lx" : "%3ld", value);
 	drawString(numberstr, 10, 5);
-	free(numberstr);
 	
 	// Border
 	drawBorder();

@@ -47,8 +47,8 @@ fat(use_fat), changed(false)
 	configpath[0] = '\0';
 	configpath[SETTINGS_FILENAME_LEN] = '\0';
 
-	snprintf(songpath, SETTINGS_FILENAME_LEN, "%s/", launch_path != NULL ? launch_path : "");
-	snprintf(samplepath, SETTINGS_FILENAME_LEN, "%s/", launch_path != NULL ? launch_path : "");
+	sniprintf(songpath, SETTINGS_FILENAME_LEN, "%s/", launch_path != NULL ? launch_path : "");
+	sniprintf(samplepath, SETTINGS_FILENAME_LEN, "%s/", launch_path != NULL ? launch_path : "");
 
 	if(fat == true)
 	{
@@ -58,7 +58,7 @@ fat(use_fat), changed(false)
 			dirCreate("/data/NitroTracker");
 		}
 
-		snprintf(configpath, SETTINGS_FILENAME_LEN, "%s/%s",
+		sniprintf(configpath, SETTINGS_FILENAME_LEN, "%s/%s",
 			launch_path != NULL ? launch_path : SETTINGS_DEFAULT_DATA_DIR,
 			SETTINGS_CONFIG_FILENAME);
 
@@ -182,7 +182,7 @@ bool Settings::write(void)
 	char hstring[20], prevstring[20];
 	handednessToString(hstring);
 	boolToString(sample_preview, prevstring);
-	fprintf(conf, "Samplepath = %s\nSongpath = %s\nHandedness = %s\nSample Preview = %s\n",
+	fiprintf(conf, "Samplepath = %s\nSongpath = %s\nHandedness = %s\nSample Preview = %s\n",
 			samplepath, songpath, hstring, prevstring);
 	fclose(conf);
 	return true;
@@ -266,7 +266,7 @@ bool Settings::getConfigValue(char *config, const char *attribute, char *value, 
 	memset(value, 0, maxlen);
 
 	size_t vallen = valend - valstart + 1;
-	size_t len = min(maxlen-1, vallen);
+	size_t len = std::min(maxlen-1, vallen);
 	strncpy(value, valstart, len);
 	value[len] = 0;
 

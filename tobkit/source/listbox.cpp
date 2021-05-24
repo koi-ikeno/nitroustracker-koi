@@ -303,7 +303,7 @@ void ListBox::draw(void)
 	// Numbers (if enabled)
 	u16 contentoffset;
 	if(show_numbers) {
-		char *numberstr = (char*)malloc(4 + 1);
+		char numberstr[4 + 1];
 		//iprintf("%u %u\n",scrollpos,elements.size());
 		u16 offset;
 		if(zero_offset==true) {
@@ -312,10 +312,9 @@ void ListBox::draw(void)
 			offset=1;
 		}
 		for(i=0;(i<height/ROW_HEIGHT)&&(scrollpos+i<elements.size());++i) {
-			snprintf(numberstr, 4 + 1, "%2x", (u16) (scrollpos+i+offset));
+			sniprintf(numberstr, sizeof(numberstr), "%2x", (u16) (scrollpos+i+offset));
 			drawString(numberstr, 2, ROW_HEIGHT*i+2);
 		}
-		free(numberstr);
 		
 		contentoffset = COUNTER_WIDTH;
 	} else {

@@ -28,6 +28,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <nds.h>
+#include <algorithm>
 
 // A collection of utilities for everyday DS coding
 
@@ -38,9 +39,6 @@ static inline void debugprintf(...) {}
 #endif
 
 #define ceil_f32toint(n) (((n) + ((1 << 12) - 1)) >> 12)
-
-#define min(x,y) ((x)<(y)?(x):(y))
-#define max(x,y) ((x)>(y)?(x):(y))
 
 void lowercase(char *str);
 void dbgWaitButton(void);
