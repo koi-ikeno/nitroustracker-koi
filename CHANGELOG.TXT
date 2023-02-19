@@ -1,8 +1,20 @@
 -- WIP
 
+-- v0.4.2-beta (2023-02-19)
+
 New features:
 
 - in-tracker file deletion support (#5)
+
+Improvements:
+
+- further filesize reduction
+- further improvements to file selector
+
+Fixes:
+
+- fixed file selector crashing when tapping ".." on the root directory
+- updated to devkitARM r59, libnds 1.8.2
 
 -- v0.4.1-beta (2020-07-09)
 

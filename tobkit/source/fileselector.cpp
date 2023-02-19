@@ -89,18 +89,19 @@ void FileSelector::penDown(u8 px, u8 py)
 		// If it is "..", go down a directory
 		} else if(filelist.at(activeelement).name == "..") {
 			std::string name = current_directory;
-			u8 slashpos = name.find_last_of("/", name.length()-2);
-			name.erase(slashpos, name.length()-slashpos-1);
-			current_directory = name;
-			//iprintf("%s\n",current_directory.c_str());
-			activeelement = 0;
+			auto slashpos = name.find_last_of("/", name.length()-2);
+			if(slashpos != std::string::npos) {
+				name.erase(slashpos, name.length()-slashpos-1);
+				current_directory = name;
+				//iprintf("%s\n",current_directory.c_str());
+				activeelement = 0;
 
-			if(onDirChange != NULL) {
-				onDirChange(current_directory.c_str());
+				if(onDirChange != NULL) {
+					onDirChange(current_directory.c_str());
+				}
+
+				invalidateFileList();
 			}
-
-			invalidateFileList();
-
 		// If it is a file, call the callback
 		} else if(onFileSelect != 0) {
 			onFileSelect(filelist.at(activeelement));
@@ -274,8 +275,8 @@ void FileSelector::read_directory(void)
 				// Don't filter dirs
 				newfilelist.push_back(*fileit);
 			} else {
-				u8 extensionsize;
-				u32 lastdot = fileit->name.find_last_of(".");
+				u32 extensionsize;
+				auto lastdot = fileit->name.find_last_of(".");
 				if(lastdot != std::string::npos) {
 					extensionsize = fileit->name.size() - fileit->name.find_last_of(".") - 1;
 				} else {

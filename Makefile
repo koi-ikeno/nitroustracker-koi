@@ -9,6 +9,7 @@ include $(DEVKITARM)/ds_rules
 
 export TARGET		:=	$(shell basename $(CURDIR))
 export TOPDIR		:=	$(CURDIR)
+export NITROTRACKER_VERSION := 0.4.2
 
 #---------------------------------------------------------------------------------
 # path to tools - this can be deleted if you set the path in windows
@@ -36,10 +37,10 @@ libdsmi:
 
 #---------------------------------------------------------------------------------
 $(TARGET).nds	:	libdsmi libntxm tobkit arm7/$(TARGET).elf arm9/$(TARGET).elf
-	ndstool -c $(TARGET).nds -7 arm7/$(TARGET).arm7.elf -9 arm9/$(TARGET).arm9.elf -b icon.bmp "NitroTracker"
+	ndstool -c $(TARGET).nds -7 arm7/$(TARGET).arm7.elf -9 arm9/$(TARGET).arm9.elf -b icon.bmp "NitroTracker $(NITROTRACKER_VERSION)"
 
 $(TARGET).debug.nds	:	libdsmi libntxm tobkit-debug arm7/$(TARGET).debug.elf arm9/$(TARGET).debug.elf
-	ndstool -c $(TARGET).debug.nds -7 arm7/$(TARGET).arm7.debug.elf -9 arm9/$(TARGET).arm9.debug.elf -b icon.bmp "NitroTracker (debug)"
+	ndstool -c $(TARGET).debug.nds -7 arm7/$(TARGET).arm7.debug.elf -9 arm9/$(TARGET).arm9.debug.elf -b icon.bmp "NitroTracker $(NITROTRACKER_VERSION) (debug)"
 
 #---------------------------------------------------------------------------------
 arm7/$(TARGET).debug.elf:
