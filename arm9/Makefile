@@ -5,14 +5,6 @@ ifeq ($(strip $(DEVKITARM)),)
 $(error "Please set DEVKITARM in your environment. export DEVKITARM=<path to>devkitARM")
 endif
 
-ifeq ($(strip $(LIBDSMI)),)
-$(error "Please set LIBDSMI in your environment. export LIBDSMI=<path to>libdsmi")
-endif
-
-ifeq ($(strip $(LIBNTXM)),)
-$(error "Please set LIBNTXM in your environment. export LIBNTXM=<path to>libntxm")
-endif
-
 include $(DEVKITARM)/ds_rules
 
 #---------------------------------------------------------------------------------
@@ -64,7 +56,7 @@ LDFLAGS	=	-specs=ds_arm9.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 # list of directories containing libraries, this must be the top level containing
 # include and lib
 #---------------------------------------------------------------------------------
-LIBDIRS	:= $(LIBDSMI) $(LIBNTXM) $(TOPDIR)/tobkit $(LIBNDS)
+LIBDIRS	:= $(TOPDIR)/libntxm/libntxm $(TOPDIR)/dsmi/ds/libdsmi $(LIBNTXM) $(TOPDIR)/tobkit $(LIBNDS)
 
 #---------------------------------------------------------------------------------
 # no real need to edit anything past this point unless you need to add additional

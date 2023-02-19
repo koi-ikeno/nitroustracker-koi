@@ -7,14 +7,6 @@ endif
 
 include $(DEVKITARM)/ds_rules
 
-ifeq ($(strip $(LIBDSMI)),)
-$(error "Please set LIBDSMI in your environment. export LIBDSMI=<path to>libdsmi")
-endif
-
-ifeq ($(strip $(LIBNTXM)),)
-$(error "Please set LIBNTXM in your environment. export LIBNTXM=<path to>libntxm")
-endif
-
 export TARGET		:=	$(shell basename $(CURDIR))
 export TOPDIR		:=	$(CURDIR)
 
@@ -31,7 +23,7 @@ export PATH		:=	$(DEVKITARM)/bin:$(PATH)
 all: $(TARGET).nds $(TARGET).debug.nds
 
 libntxm:
-	@make -C $(LIBNTXM)
+	@make -C libntxm/libntxm
 
 tobkit:
 	@make -C tobkit
@@ -40,7 +32,7 @@ tobkit-debug:
 	@make -C tobkit DEBUG=true
 
 libdsmi:
-	@make -C $(LIBDSMI)
+	@make -C dsmi/ds/libdsmi
 
 #---------------------------------------------------------------------------------
 $(TARGET).nds	:	libdsmi libntxm tobkit arm7/$(TARGET).elf arm9/$(TARGET).elf

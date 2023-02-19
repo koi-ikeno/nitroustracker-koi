@@ -1,0 +1,6 @@
+[submodule "dsmi"]
+	path = dsmi
+	url = https://github.com/asiekierka/dsmi
+[submodule "libntxm"]
+	path = libntxm
+	url = https://github.com/asiekierka/libntxm

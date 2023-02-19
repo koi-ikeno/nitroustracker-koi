@@ -7,10 +7,6 @@ endif
 
 include $(DEVKITARM)/ds_rules
 
-ifeq ($(strip $(LIBNTXM)),)
-$(error "Please set LIBNTXM in your environment. export LIBNTXM=<path to>libntxm")
-endif
-
 #---------------------------------------------------------------------------------
 # BUILD is the directory where object files & intermediate files will be placed
 # SOURCES is a list of directories containing source code
@@ -54,7 +50,7 @@ LDFLAGS	=	-specs=ds_arm7.specs -g $(ARCH) -Wl,-Map,$(notdir $*).map
 # list of directories containing libraries, this must be the top level containing
 # include and lib
 #---------------------------------------------------------------------------------
-LIBDIRS	:=	$(LIBNDS) $(LIBNTXM)
+LIBDIRS	:=	$(LIBNDS) $(TOPDIR)/libntxm/libntxm
  
   
 #---------------------------------------------------------------------------------
