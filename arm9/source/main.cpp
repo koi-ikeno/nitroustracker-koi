@@ -3456,7 +3456,7 @@ int main(int argc, char **argv) {
 	setBrightness(3, 16);
 #endif
 
-	powerOn(POWER_ALL);
+	powerOn(POWER_ALL_2D);
 
 	// Adjust screens so that the main screen is the top screen
 	lcdMainOnTop();
