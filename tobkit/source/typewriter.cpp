@@ -31,7 +31,7 @@ limitations under the License.
 #define SHF	0x4 // Shift
 #define NOK 0x0 // No key
 
-#define MAX_TEXT_LEN	20
+#define MAX_TEXT_LEN	256 // TODO: make dynamic
 
 #define TW_WIDTH	216
 #define TW_HEIGHT	127
@@ -67,7 +67,7 @@ Typewriter::Typewriter(const char *_msg, u16 *_char_base,
 	msglabel->setCaption(_msg);
 	gui.registerWidget(msglabel, 0, SUB_SCREEN);
 	
-	label = new Label(x+msglength+8, y+4, TW_WIDTH-msglength-12, 15, _vram, true);
+	label = new Label(x+msglength+8, y+4, TW_WIDTH-msglength-12, 15, _vram, true, false, false, true);
 	gui.registerWidget(label, 0, SUB_SCREEN);
 	
 	buttonok = new Button(x+TW_WIDTH/2+2, y+TW_HEIGHT-12-4, 50, 12, _vram);

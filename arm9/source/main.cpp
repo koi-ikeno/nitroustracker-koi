@@ -998,7 +998,7 @@ void handleTypewriterFilenameOk(void)
 		if( (rbsong->getActive() == true) && (strcasecmp(text+textlen-3, ".xm") != 0) )
 		{
 			// Append extension
-			name = (char*)malloc(+3+1);
+			name = (char*)malloc(textlen+3+1);
 			strcpy(name,text);
 			strcpy(name+textlen,".xm");
 		}

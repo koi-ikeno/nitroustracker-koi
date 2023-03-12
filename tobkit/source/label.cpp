@@ -24,9 +24,9 @@ limitations under the License.
 
 /* ===================== PUBLIC ===================== */
 
-Label::Label(u8 _x, u8 _y, u8 _width, u8 _height, uint16 **_vram, bool _has_border, bool _albino, bool _no_bg)
+Label::Label(u8 _x, u8 _y, u8 _width, u8 _height, uint16 **_vram, bool _has_border, bool _albino, bool _no_bg, bool _right_aligned)
 	:Widget(_x, _y, _width, _height, _vram),
-	onPush(0), caption(0), has_border(_has_border), is_albino(_albino), no_bg(_no_bg)
+	onPush(0), caption(0), has_border(_has_border), is_albino(_albino), no_bg(_no_bg), right_aligned(_right_aligned)
 {
 
 }
@@ -89,23 +89,36 @@ void Label::draw(void)
 		col_text = theme->col_text;
 	}
 
+	int caption_x_offset = 0;
+	int caption_y_offset = 0;
+
 	if(has_border)
 	{
 		if(!no_bg)
 			drawFullBox(0, 0, width, height, theme->col_lighter_bg);
 		drawBorder();
-		if(caption) {
-			drawString(caption,2,2,width/*-4*/,col_text);
-		}
+		caption_x_offset += 2;
+		caption_y_offset += 2;
 	}
 	else
 	{
 		if(!no_bg)
 			drawFullBox(0, 0, width, height, col_bg);
-
-		if(caption) {
-			drawString(caption,0,0,width/*-4*/,col_text);
-		}
 	}
 
+	if(caption) {
+		int caption_width = width - (caption_x_offset * 2);
+		if(right_aligned) {
+			// TODO: this is a kludge...
+			const char *caption_local = caption;
+			int string_width = getStringWidth(caption_local);
+			while (string_width > caption_width) {
+				caption_local++;
+				string_width = getStringWidth(caption_local);
+			}
+			drawString(caption_local,caption_x_offset,caption_y_offset,caption_width,col_text);
+		} else {
+			drawString(caption,caption_x_offset,caption_y_offset,caption_width,col_text);
+		}
+	}
 }
