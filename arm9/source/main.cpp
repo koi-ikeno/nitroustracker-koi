@@ -858,11 +858,7 @@ void saveFile(void)
 	stopPlay();
 
 	char *filename = labelFilename->getCaption();
-	const char *path = fileselector->getDir().c_str();
-	char *pathfilename = (char*)malloc( strlen(path)+strlen(filename)+1 );
-	memset(pathfilename, 0, strlen(path)+strlen(filename)+1);
-	strcpy(pathfilename, path);
-	strcpy(pathfilename+strlen(path), filename);
+	chdir(fileselector->getDir().c_str());
 
 	debugprintf("saving %s ...\n", filename);
 
@@ -875,20 +871,18 @@ void saveFile(void)
 	if(rbsong->getActive() == true) // Save the song
 	{
 		if(song != 0) {
-			err = xm_transport.save(pathfilename, song);
+			err = xm_transport.save(filename, song);
 		}
 	}
 	else if(rbsample->getActive() == true) // Save the sample
 	{
-		song->getInstrument(state->instrument)->getSample(state->sample)->saveAsWav(pathfilename);
+		song->getInstrument(state->instrument)->getSample(state->sample)->saveAsWav(filename);
 	}
 
 	deleteMessageBox();
 	updateFilesystemState(true);
 
 	debugprintf("done\n");
-
-	free(pathfilename);
 
 	if(err > 0)
 	{
@@ -927,16 +921,10 @@ void handleSave(void)
 		}
 	}
 
-	// construct filename with path
-	const char *path = fileselector->getDir().c_str();
-
-	char *pathfilename = (char*)malloc(strlen(path)+strlen(filename)+1);
-	memset(pathfilename, 0, strlen(path)+strlen(filename)+1);
-	strcpy(pathfilename, path);
-	strcpy(pathfilename+strlen(path), filename);
+	chdir(fileselector->getDir().c_str());
 
 	// Check if file already exists
-	if(my_file_exists(pathfilename))
+	if(my_file_exists(filename))
 	{
 		mb = new MessageBox(&sub_vram, "overwrite file", 2, "yes", mbOverwrite, "no", deleteMessageBox);
 		gui->registerOverlayWidget(mb, 0, SUB_SCREEN);
@@ -946,7 +934,6 @@ void handleSave(void)
 		saveFile();
 	}
 
-	free(pathfilename);
 	updateMemoryState();
 }
 
