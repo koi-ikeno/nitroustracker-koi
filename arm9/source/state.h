@@ -31,7 +31,7 @@
 #include <nds.h>
 #include "ntxm/song.h"
 
-#define STATE_FILENAME_LEN 511
+#define STATE_FILENAME_LEN 255
 
 class State {
 	public:
@@ -39,8 +39,14 @@ class State {
 		void reset(void);
 		void resetSong(void); // resets only song-specific settings
 
-		u8 potpos;
+		char *song_filename;
+		char *sample_filename;
+
+		Sample *preview_sample;
+
+		s16 queued_potpos;
 		u16 row;
+		u8 potpos;
 		u8 channel;
 
 		u8 add;
@@ -51,16 +57,11 @@ class State {
 		bool playing;
 		bool pause;
 
-		char *song_filename;
-		char *sample_filename;
-
 		bool dsmi_connected;
 		bool dsmi_send;
 		bool dsmi_recv;
 
 		bool map_samples;
-
-		Sample *preview_sample;
 };
 
 #endif

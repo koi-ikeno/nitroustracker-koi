@@ -169,6 +169,7 @@ GUI *gui;
 	ListBox *lbpot;
 	Button *buttonpotup, *buttonpotdown, *buttoncloneptn,
 		*buttonmorechannels, *buttonlesschannels, *buttonzap, *buttonrenamesong;
+	ToggleButton *tbqueuelock;
 	NumberBox *nbtempo;
 	NumberSlider *nsptnlen, *nsbpm, *nsrestartpos;
 	MemoryIndicator *memoryiindicator;
@@ -1187,13 +1188,25 @@ void pausePlay(void)
 	buttonplay->show();
 }
 
-void potGoto(u8 pos)
+bool potGoto(u8 pos)
 {
-	state->potpos = pos;
-	state->row = 0;
-
-	if((state->playing == true) && (state->pause == false)) // Play from new pattern
-		CommandStartPlay(state->potpos, state->row, true);
+	if((state->playing == true) && (state->pause == false)) {
+		if (tbqueuelock->getState()) {
+			state->queued_potpos = pos;
+			lbpot->highlight(state->queued_potpos);
+			lbpot->select(state->potpos);
+			return false;
+		} else {
+			state->potpos = pos;
+			state->row = 0;
+			CommandStartPlay(state->potpos, state->row, true);
+			return true;
+		}
+	} else {
+		state->potpos = pos;
+		state->row = 0;
+		return true;
+	}
 }
 
 
@@ -1236,14 +1249,23 @@ void updateGuiToNewPattern(u8 newpattern)
 // Callback called from song when the pot element changes during playback
 void handlePotPosChangeFromSong(u16 newpotpos)
 {
-	state->potpos = newpotpos;
-	state->row = 0;
+	if (state->queued_potpos >= 0) {
+		state->potpos = state->queued_potpos;
+		state->row = 0;
+
+		CommandStartPlay(state->potpos, state->row, true);
+		state->queued_potpos = -1;
+		lbpot->highlight(state->queued_potpos);
+	} else {
+		state->potpos = newpotpos;
+		state->row = 0;
+	}
 
 	// Update lbpot
-	lbpot->select(newpotpos);
+	lbpot->select(state->potpos);
 
 	// Update other GUI Elements
-	updateGuiToNewPattern(song->getPotEntry(newpotpos));
+	updateGuiToNewPattern(song->getPotEntry(state->potpos));
 }
 
 #ifdef WIFI
@@ -1288,10 +1310,9 @@ void handlePotPosChangeFromUser(u16 newpotpos)
 {
 	// Update potpos in song
 	if(newpotpos>=song->getPotLength()) {
-		potGoto(song->getPotLength() - 1);
-	} else {
-		potGoto(newpotpos);
+		newpotpos = song->getPotLength() - 1;
 	}
+	if (!potGoto(newpotpos)) return;
 
 	// Update other GUI Elements
 	updateGuiToNewPattern(song->getPotEntry(newpotpos));
@@ -2456,6 +2477,14 @@ void toggleMapSamples(bool is_active)
 	state->map_samples = is_active;
 }
 
+void toggleQueueLock(bool is_active)
+{
+	if(!is_active) {
+		state->queued_potpos = -1;
+		lbpot->highlight(state->queued_potpos);
+	}
+}
+
 void addEnvPoint(void)
 {
 	Instrument *inst = song->getInstrument(state->instrument);
@@ -2683,19 +2712,22 @@ void setupGUI(bool dldi_enabled)
 		buttoncloneptn = new Button(56, 34, 26, 12, &sub_vram);
 		buttoncloneptn->setCaption("cln");
 		buttoncloneptn->registerPushCallback(handlePtnClone);
+		tbqueuelock = new ToggleButton(56, 73, 26, 12, &sub_vram, true);
+		tbqueuelock->setCaption("lock");
+		tbqueuelock->registerToggleCallback(toggleQueueLock);
 
-		labelptnlen = new Label(56, 73, 45, 12, &sub_vram, false);
+		labelptnlen = new Label(87, 48, 50, 12, &sub_vram, false);
 		labelptnlen->setCaption("ptn len:");
-		nsptnlen = new NumberSlider(56, 83, 32, 17, &sub_vram, DEFAULT_PATTERN_LENGTH, 1, 256, true);
+		nsptnlen = new NumberSlider(105, 60, 32, 17, &sub_vram, DEFAULT_PATTERN_LENGTH, 1, 256, true);
 		nsptnlen->registerChangeCallback(handlePtnLengthChange);
 
-		labelchannels = new Label(88, 22, 48, 12, &sub_vram, false);
+		labelchannels = new Label(87, 22, 48, 12, &sub_vram, false);
 		labelchannels->setCaption("chn:  4");
-		buttonlesschannels = new Button(86, 34, 23, 12, &sub_vram);
-		buttonlesschannels->setCaption("sub");
+		buttonlesschannels = new Button(111, 33, 12, 12, &sub_vram);
+		buttonlesschannels->setCaption("-");
 		buttonlesschannels->registerPushCallback(handleChannelDel);
-		buttonmorechannels = new Button(111, 34, 23, 12, &sub_vram);
-		buttonmorechannels->setCaption("add");
+		buttonmorechannels = new Button(125, 33, 12, 12, &sub_vram);
+		buttonmorechannels->setCaption("+");
 		buttonmorechannels->registerPushCallback(handleChannelAdd);
 
 		labeltempo = new Label(4, 101, 32, 12, &sub_vram, false);
@@ -2727,10 +2759,10 @@ void setupGUI(bool dldi_enabled)
 		buttonzap->setCaption("zap!");
 		buttonzap->registerPushCallback(handleZap);
 
-		memoryiindicator = new MemoryIndicator(86, 52, 48, 8, &sub_vram);
-
-		labelramusage = new Label(87, 59, 52, 12, &sub_vram, false);
+		labelramusage = new Label(87, 78, 52, 12, &sub_vram, false);
 		labelramusage->setCaption("ram use");
+
+		memoryiindicator = new MemoryIndicator(87, 90, 50, 8, &sub_vram);
 
 		tabbox->registerWidget(lbpot, 0, 0);
 		tabbox->registerWidget(buttonpotup, 0, 0);
@@ -2738,6 +2770,7 @@ void setupGUI(bool dldi_enabled)
 		tabbox->registerWidget(buttonins, 0, 0);
 		tabbox->registerWidget(buttondel, 0, 0);
 		tabbox->registerWidget(buttoncloneptn, 0, 0);
+		tabbox->registerWidget(tbqueuelock, 0, 0);
 		tabbox->registerWidget(nsptnlen, 0, 0);
 		tabbox->registerWidget(labelptnlen, 0, 0);
 		tabbox->registerWidget(labelchannels, 0, 0);

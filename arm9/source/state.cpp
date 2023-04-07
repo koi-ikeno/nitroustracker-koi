@@ -45,6 +45,7 @@ void State::reset(void)
 void State::resetSong(void) // resets only song-specific settings
 {
 	potpos = 0;
+	queued_potpos = -1;
 	row = 0;
 	channel = 0;
 	add = 1;

@@ -24,7 +24,7 @@ limitations under the License.
 ListBox::ListBox(u8 _x, u8 _y, u8 _width, u8 _height, uint16 **_vram, u16 n_items,
 	bool _show_numbers, bool _visible, bool _zero_offset)
 	:Widget(_x, _y, _width, _height, _vram, _visible),
-	buttonstate(0), activeelement(0), scrollpos(0), oldscrollpos(0),
+	buttonstate(0), activeelement(0), highlightedelement(-1), scrollpos(0), oldscrollpos(0),
 	show_numbers(_show_numbers),
 	zero_offset(_zero_offset)
 {
@@ -218,8 +218,16 @@ u16 ListBox::getidx(void) {
 void ListBox::clear(void)
 {
 	activeelement = 0;
+	highlightedelement = -1;
 	scrollpos = 0;
 	elements.clear();
+}
+
+void ListBox::highlight(s32 idx)
+{
+	highlightedelement = idx;
+
+	draw();
 }
 
 void ListBox::select(u16 idx)
@@ -257,11 +265,16 @@ void ListBox::draw(void)
 	
 	// Fill rows
 	for(i=0;i<rows_displayed;++i) {
-		if(scrollpos+i==activeelement) {
-			drawGradient(theme->col_list_highlight1, theme->col_list_highlight2, 1, ROW_HEIGHT*i+1, width-SCROLLBAR_WIDTH-1, ROW_HEIGHT-1);
-		} else {
-			drawGradient(theme->col_medium_bg, theme->col_light_bg, 1, ROW_HEIGHT*i+1, width-SCROLLBAR_WIDTH-1, ROW_HEIGHT-1);
+		u16 col_bottom = theme->col_medium_bg;
+		u16 col_top = theme->col_light_bg;
+		if((scrollpos+i)==activeelement) {
+			col_bottom = theme->col_list_highlight1;
+			col_top = theme->col_list_highlight2;
+		} else if((scrollpos+i)==highlightedelement) {
+			col_bottom = theme->col_light_bg;
+			col_top = theme->col_lighter_bg;
 		}
+		drawGradient(col_bottom, col_top, 1, ROW_HEIGHT*i+1, width-SCROLLBAR_WIDTH-1, ROW_HEIGHT-1);
 	}
 
 	// Vertical number separator line
