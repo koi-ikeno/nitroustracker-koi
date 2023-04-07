@@ -480,8 +480,12 @@ void SampleDisplay::draw(void)
 	//
 
 	u16 colortable[DRAW_HEIGHT+2];
-	for(u8 i=0; i<DRAW_HEIGHT+2; ++i)
+	u16 colortable_selected[DRAW_HEIGHT+2];
+	for(s32 i=0; i<DRAW_HEIGHT+2; i++) {
 		colortable[i] = interpolateColor(theme->col_light_ctrl, theme->col_dark_ctrl, i<<4);
+		//colortable_selected[i] = ((colortable[i] >> 2) & 0x1CE7) | 0x8000;
+		colortable_selected[i] = 0x8000;
+	}
 
 	int32 step = divf32(inttof32(smp->getNSamples() >> zoom_level), inttof32(width-2));
 	int32 pos = 0;
@@ -496,8 +500,9 @@ void SampleDisplay::draw(void)
 		s16 *data;
 		s16 *base = (s16*)smp->getData() + pixelToSample(0);
 
-		for(u32 i=1; i<u32(width-1); ++i)
+		for(s32 i=1; i<s32(width-1); ++i)
 		{
+			u16 *colortable_current = (i >= selleft+1 && i <= selleft+selwidth) ? colortable_selected : colortable;
 			data = &(base[f32toint(pos)]);
 
 			s32 maxsmp = -32767, minsmp = 32767;
@@ -516,12 +521,12 @@ void SampleDisplay::draw(void)
 				if(lastmax < miny) miny = lastmax;
 			}
 
-			for(s16 j=miny; j<=maxy; ++j) (*vram)[SCREEN_WIDTH*(y+middle-j)+x+i] = colortable[middle-j];
+			for(s16 j=miny; j<=maxy; ++j) (*vram)[SCREEN_WIDTH*(y+middle-j)+x+i] = colortable_current[middle-j];
 
 			lastmax = maxy;
 			lastmin = miny;
 
-			*(*vram+SCREEN_WIDTH*(y+middle)+x+i) = colortable[middle];
+			*(*vram+SCREEN_WIDTH*(y+middle)+x+i) = colortable_current[middle];
 
 			pos += step;
 		}
@@ -531,8 +536,9 @@ void SampleDisplay::draw(void)
 		s8 *data;
 		s8 *base = (s8*)smp->getData() + pixelToSample(0);
 
-		for(u32 i=1; i<u32(width-1); ++i)
+		for(s32 i=1; i<s32(width-1); ++i)
 		{
+			u16 *colortable_current = (i >= selleft+1 && i <= selleft+selwidth) ? colortable_selected : colortable;
 			data = &(base[f32toint(pos)]);
 
 			s8 maxsmp = -127, minsmp = 127;
@@ -551,12 +557,12 @@ void SampleDisplay::draw(void)
 				if(lastmax < miny) miny = lastmax;
 			}
 
-			for(s16 j=miny; j<=maxy; ++j) (*vram)[SCREEN_WIDTH*(y+middle-j)+x+i] = colortable[middle-j];
+			for(s16 j=miny; j<=maxy; ++j) (*vram)[SCREEN_WIDTH*(y+middle-j)+x+i] = colortable_current[middle-j];
 
 			lastmax = maxy;
 			lastmin = miny;
 
-			*(*vram+SCREEN_WIDTH*(y+middle)+x+i) = colortable[middle];
+			*(*vram+SCREEN_WIDTH*(y+middle)+x+i) = colortable_current[middle];
 
 			pos += step;
 		}

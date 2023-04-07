@@ -109,7 +109,7 @@ class Widget {
 		void drawPixel(u8 tx, u8 ty, u16 col);
 		void drawGradient(u16 col1, u16 col2, u8 tx, u8 ty, u8 tw, u8 th);
 
-		inline const u16 interpolateColor(u16 col1, u16 col2, int alpha /* 0..12 */) {
+		inline const u16 interpolateColor(u16 col1, u16 col2, int alpha /* 0..4095 */) {
 			/*
 			u8 r1,g1,b1,r2,g2,b2,rn,gn,bn;
 			r1 = col1 & 0x001F;

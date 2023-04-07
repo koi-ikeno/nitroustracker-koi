@@ -79,6 +79,8 @@
 #include "icon_undo_raw.h"
 #include "icon_redo_raw.h"
 
+#include "icon_new_folder_raw.h"
+
 #include "sampleedit_control_icon_raw.h"
 #include "sampleedit_chip_icon_raw.h"
 #include "sampleedit_wave_icon_raw.h"
@@ -155,6 +157,7 @@ GUI *gui;
 	RadioButton *rbsong, *rbsample, *rbinst;
 	RadioButton::RadioButtonGroup *rbgdiskop;
 	Button *buttonsave, *buttonload, *buttondelfile, *buttonchangefilename;
+	BitButton *buttonnewfolder;
 	FileSelector *fileselector;
 	MemoryIndicator *memoryiindicator_disk;
 	CheckBox *cbsamplepreview;
@@ -489,10 +492,10 @@ void updateMemoryState(void)
 	memoryiindicator_disk->pleaseDraw();
 }
 
-void updateFilesystemState(void)
+void updateFilesystemState(bool draw)
 {
 	fileselector->invalidateFileList();
-	fileselector->pleaseDraw();
+	if(draw) fileselector->pleaseDraw();
 }
 
 void sampleChange(Sample *smp)
@@ -786,9 +789,10 @@ void handleDelfileConfirmed(void)
 	const char *fn = file->name_with_path.c_str();
 	if (unlink(fn)) {
 		showMessage("error deleting file", true);
+		updateFilesystemState(false);
+	} else {
+		updateFilesystemState(true);
 	}
-
-	updateFilesystemState();
 }
 
 void handleDelfile(void)
@@ -880,7 +884,7 @@ void saveFile(void)
 	}
 
 	deleteMessageBox();
-	updateFilesystemState();
+	updateFilesystemState(true);
 
 	debugprintf("done\n");
 
@@ -1770,6 +1774,21 @@ void showTypewriterForFilename(void) {
 	showTypewriter("filename", labelFilename->getCaption(), handleTypewriterFilenameOk, deleteTypewriter);
 }
 
+void handleTypewriterNewFolderOk(void)
+{
+	char *text = tw->getText();
+	if(text[0] != '\0' && strchr(text, '/') == NULL && strchr(text, ':') == NULL)
+	{
+		mkdir(text, 0777);
+		// TODO: Enter directory after creating it?
+		updateFilesystemState(true);
+	}
+	deleteTypewriter();
+}
+
+void showTypewriterForNewFolder(void) {
+	showTypewriter("dir name", "", handleTypewriterNewFolderOk, deleteTypewriter);
+}
 
 void handleTypewriterInstnameOk(void)
 {
@@ -2629,13 +2648,16 @@ void setupGUI(bool dldi_enabled)
 		buttondelfile->setCaption("del");
 		buttondelfile->registerPushCallback(handleDelfile);
 
-		labelFilename = new Label(3, 134, 110, 14, &sub_vram);
+		labelFilename = new Label(3, 134, 95, 14, &sub_vram);
 		labelFilename->setCaption("");
 		labelFilename->registerPushCallback(showTypewriterForFilename);
 
-		buttonchangefilename = new Button(115, 134, 23, 14, &sub_vram);
+		buttonchangefilename = new Button(100, 134, 22, 14, &sub_vram);
 		buttonchangefilename->setCaption("...");
 		buttonchangefilename->registerPushCallback(showTypewriterForFilename);
+
+		buttonnewfolder = new BitButton(124, 134, 14, 14, &sub_vram, icon_new_folder_raw, 8, 8, 3, 3);
+		buttonnewfolder->registerPushCallback(showTypewriterForNewFolder);
 
 	if (dldi_enabled)
 	{
@@ -2651,6 +2673,7 @@ void setupGUI(bool dldi_enabled)
 		tabbox->registerWidget(buttonload, 0, 1);
 		tabbox->registerWidget(labelFilename, 0, 1);
 		tabbox->registerWidget(buttonchangefilename, 0, 1);
+		tabbox->registerWidget(buttonnewfolder, 0, 1);
 	}
 	// </Disk OP GUI>
 
