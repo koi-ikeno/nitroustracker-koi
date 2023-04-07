@@ -46,6 +46,9 @@ class Settings {
 		bool getSamplePreview(void);
 		void setSamplePreview(bool sample_preview_);
 
+		bool getStereoOutput(void);
+		void setStereoOutput(bool stereo_output_);
+
 		Theme *getTheme(void);
 		void setTheme(Theme *theme_);
 
@@ -70,6 +73,7 @@ class Settings {
 
 		Handedness handedness;
 		bool sample_preview;
+		bool stereo_output;
 		Theme *theme;
 		char configpath[SETTINGS_FILENAME_LEN + 1];
 		char songpath[SETTINGS_FILENAME_LEN + 1];

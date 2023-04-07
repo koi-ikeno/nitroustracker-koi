@@ -50,6 +50,12 @@ void GroupBox::draw(void)
 {
 	drawBox(0, 4, width, height, theme->col_lighter_bg);
 	u16 strwidth = getStringWidth(text);
-	drawFullBox(10, 0, strwidth+2, 10, theme->col_light_bg);
-	drawString(text, 11, 0, width - 12);
+	int x = 10;
+	if (x+4+strwidth > width) {
+		x = width-strwidth-4;
+		if (x < 0) x = 0;
+	}
+
+	drawFullBox(x, 0, strwidth+2, 10, theme->col_light_bg);
+	drawString(text, x+1, 0, width - x - 2);
 }

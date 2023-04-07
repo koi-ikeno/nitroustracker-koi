@@ -99,9 +99,6 @@
 
 #include <fat.h>
 #include <libdsmi.h>
-#ifdef WIFIDEBUG
-#include <user_debugger.h>
-#endif
 #include <dswifi9.h>
 
 #define EXTERNAL_DATA(name) \
@@ -209,6 +206,9 @@ GUI *gui;
 	GroupBox *gbhandedness, *gbdsmw;
 	CheckBox *cbdsmwsend, *cbdsmwrecv;
 	Button *btndsmwtoggleconnect;
+	RadioButton::RadioButtonGroup *rbgoutput;
+	RadioButton *rboutputmono, *rboutputstereo;
+	GroupBox *gboutput;
 	Button *btnconfigsave;
 // </Settings Gui>
 
@@ -2039,6 +2039,13 @@ void handleHandednessChange(u8 handedness)
 	}
 }
 
+void handleOutputModeChange(u8 outputMode)
+{
+	settings->setStereoOutput(outputMode != 0);
+	CommandSetStereoOutput(outputMode != 0);
+	stopPlay();
+}
+
 
 void switchScreens(void)
 {
@@ -2922,21 +2929,21 @@ void setupGUI(bool dldi_enabled)
 	// </Instruments Gui>
 
 	// <Settings Gui>
-		gbhandedness = new GroupBox(5, 23, 84, 25, &sub_vram);
+		gbhandedness = new GroupBox(5, 23, 80, 25, &sub_vram);
 		gbhandedness->setText("handedness");
 
 		rbghandedness = new RadioButton::RadioButtonGroup();
-		rblefthanded  = new RadioButton(7 , 35, 40, 14, &sub_vram, rbghandedness);
+		rblefthanded  = new RadioButton(7 , 35, 35, 14, &sub_vram, rbghandedness);
 		rblefthanded->setCaption("left");
-		rbrighthanded = new RadioButton(47, 35, 40, 14, &sub_vram, rbghandedness);
+		rbrighthanded = new RadioButton(42, 35, 35, 14, &sub_vram, rbghandedness);
 		rbrighthanded->setCaption("right");
 		rbghandedness->setActive(1);
 		rbghandedness->registerChangeCallback(handleHandednessChange);
 
-		gbdsmw = new GroupBox(5, 55, 84, 54, &sub_vram);
+		gbdsmw = new GroupBox(5, 55, 80, 54, &sub_vram);
 		gbdsmw->setText("dsmidiwifi");
 
-		btndsmwtoggleconnect = new Button(12, 67, 71, 14, &sub_vram);
+		btndsmwtoggleconnect = new Button(10, 67, 71, 14, &sub_vram);
 		btndsmwtoggleconnect->setCaption("connect");
 
 		cbdsmwsend = new CheckBox(7, 83, 40, 14, &sub_vram, true, true);
@@ -2944,6 +2951,17 @@ void setupGUI(bool dldi_enabled)
 
 		cbdsmwrecv = new CheckBox(7, 97, 40, 14, &sub_vram, true, true);
 		cbdsmwrecv->setCaption("receive");
+
+		gboutput = new GroupBox(89, 23, 40, 34, &sub_vram);
+		gboutput->setText("out");
+
+		rbgoutput = new RadioButton::RadioButtonGroup();
+		rboutputmono = new RadioButton(91, 33, 36, 14, &sub_vram, rbgoutput);
+		rboutputmono->setCaption("1ch");
+		rboutputstereo = new RadioButton(91, 47, 36, 14, &sub_vram, rbgoutput);
+		rboutputstereo->setCaption("2ch");
+		rbgoutput->setActive(1);
+		rbgoutput->registerChangeCallback(handleOutputModeChange);
 
 		btnconfigsave = new Button(97, 135, 40, 14, &sub_vram);
 		btnconfigsave->setCaption("save");
@@ -2962,6 +2980,9 @@ void setupGUI(bool dldi_enabled)
 		tabbox->registerWidget(btnconfigsave, 0, 4);
 		tabbox->registerWidget(gbhandedness, 0, 4);
 		tabbox->registerWidget(gbdsmw, 0, 4);
+		tabbox->registerWidget(rboutputmono, 0, 4);
+		tabbox->registerWidget(rboutputstereo, 0, 4);
+		tabbox->registerWidget(gboutput, 0, 4);
 	// </Settings Gui>
 
 	lbinstruments = new ListBox(141, 33, 114, 89, &sub_vram, MAX_INSTRUMENTS, true, true, false);
@@ -3421,16 +3442,11 @@ void dumpSample(void)
 void applySettings(void)
 {
 	bool handedness = settings->getHandedness();
-	if(handedness == LEFT_HANDED)
-		rbghandedness->setActive(0);
-	else
-		rbghandedness->setActive(1);
+	rbghandedness->setActive(handedness == LEFT_HANDED ? 0 : 1);
+	rbgoutput->setActive(settings->getStereoOutput() ? 1 : 0);
 
 	bool samplepreview = settings->getSamplePreview();
 	cbsamplepreview->setChecked(samplepreview);
-
-	//fileselector->setSongPath(settings->getSongPath());
-	//fileselector->setSamplePath(settings->getSamplePath());
 
 	if(rbsong->getActive() == true)
 	{

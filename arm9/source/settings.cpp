@@ -37,6 +37,7 @@
 Settings::Settings(char *launch_path, bool use_fat)
 : handedness(RIGHT_HANDED),
 sample_preview(true),
+stereo_output(true),
 theme(new Theme()),
 fat(use_fat), changed(false)
 {
@@ -89,6 +90,9 @@ fat(use_fat), changed(false)
 			getConfigValue(confstr, "Sample Preview", prevstring, 20, "True");
 			sample_preview = stringToBool(prevstring);
 
+			getConfigValue(confstr, "Stereo Output", prevstring, 20, "True");
+			stereo_output = stringToBool(prevstring);
+
 			free(confstr);
 		}
 	}
@@ -113,6 +117,17 @@ bool Settings::getSamplePreview(void)
 void Settings::setSamplePreview(bool sample_preview_)
 {
 	sample_preview =  sample_preview_;
+	changed = true;
+}
+
+bool Settings::getStereoOutput(void)
+{
+	return stereo_output;
+}
+
+void Settings::setStereoOutput(bool stereo_output_)
+{
+	stereo_output =  stereo_output_;
 	changed = true;
 }
 
@@ -179,11 +194,12 @@ bool Settings::write(void)
 		return false;
 	}
 
-	char hstring[20], prevstring[20];
+	char hstring[20], prevstring[20], stereostring[20];
 	handednessToString(hstring);
 	boolToString(sample_preview, prevstring);
-	fiprintf(conf, "Samplepath = %s\nSongpath = %s\nHandedness = %s\nSample Preview = %s\n",
-			samplepath, songpath, hstring, prevstring);
+	boolToString(stereo_output, stereostring);
+	fiprintf(conf, "Samplepath = %s\nSongpath = %s\nHandedness = %s\nSample Preview = %s\nStereo Output = %s\n",
+			samplepath, songpath, hstring, prevstring, stereostring);
 	fclose(conf);
 	return true;
 }
