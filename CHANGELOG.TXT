@@ -1,3 +1,23 @@
+-- v0.4.4-unofficial (2023-04-07)
+
+New features:
+
+- "lock" option in pattern/song tab
+  - allows queueing patterns to be played without immediately jumping to them
+- new directory creation button in file manager
+- mono/stereo output override in the options tab
+
+Improvements:
+
+- sample highlight visual now darkens the sample area
+- adjusted the pattern/song tab's button layout
+
+Fixes:
+
+- fixed visual glitch upon a failed file save
+- fixed visual glitches when font goes outside a list box
+- further fixes to saving files in subdirectories
+
 -- v0.4.3-unofficial (2023-04-07)
 
 Improvements:

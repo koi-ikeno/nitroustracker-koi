@@ -1190,7 +1190,7 @@ void pausePlay(void)
 
 bool potGoto(u8 pos)
 {
-	if((state->playing == true) && (state->pause == false)) {
+	if(state->playing == true) {
 		if (tbqueuelock->getState()) {
 			state->queued_potpos = pos;
 			lbpot->highlight(state->queued_potpos);
@@ -1199,7 +1199,9 @@ bool potGoto(u8 pos)
 		} else {
 			state->potpos = pos;
 			state->row = 0;
-			CommandStartPlay(state->potpos, state->row, true);
+			if (state->pause == false) {
+				CommandStartPlay(state->potpos, state->row, true);
+			}
 			return true;
 		}
 	} else {
