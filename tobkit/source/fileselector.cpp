@@ -233,13 +233,6 @@ void FileSelector::read_directory(void)
 
 	struct dirent *direntry = readdir(dir);
 
-	if(direntry == NULL)
-	{
-		iprintf("No files found!\n");
-		closedir(dir);
-		return;
-	}
-
 	char filename[PATH_MAX];
 	while(direntry != NULL)
 	{
