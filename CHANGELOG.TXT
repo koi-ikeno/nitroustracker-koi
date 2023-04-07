@@ -1,4 +1,18 @@
--- WIP
+-- v0.4.3-unofficial (2023-04-07)
+
+Improvements:
+
+- migrated to the BlocksDS toolchain
+  - the most visible difference is about ~140KB more free RAM on start
+- minor optimizations
+- support renaming longer filenames
+
+Fixes:
+
+- fixed crash related to song renaming
+- fixed loading 8-bit stereo .WAV files
+- fixed minor memory leak when loading .WAV files
+- fixed race condition causing some sample files to not be previewable
 
 -- v0.4.2-beta (2023-02-19)
 

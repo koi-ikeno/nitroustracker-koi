@@ -106,7 +106,6 @@
 
 #define EXTERNAL_DATA(name) \
   extern const uint8  name[]; \
-  extern const uint8 name##_end[]; \
   extern const uint32 name##_size
 
 #define REPEAT_FREQ	10 /* Hz */
@@ -1626,6 +1625,7 @@ void handleFileChange(File file)
 	if(!file.is_dir)
 	{
 		const char *str = file.name.c_str();
+		int slen = strlen(str);
 		labelFilename->setCaption(str);
 
 		if(rbsong->getActive() == true)
@@ -1638,7 +1638,7 @@ void handleFileChange(File file)
 		}
 
 		// Preview wav files
-		if( (strcasecmp(&str[strlen(str)-4], ".wav") == 0) && (settings->getSamplePreview() == true) )
+		if(slen > 4 && (strcasecmp(&str[slen-4], ".wav") == 0) && (settings->getSamplePreview() == true) )
 		{
 			// Stop playing sample if necessary
 			CommandStopInst(0);
