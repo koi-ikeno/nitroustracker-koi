@@ -38,6 +38,13 @@
 static inline void debugprintf(...) {}
 #endif
 
+#ifdef BLOCKSDS
+#define iprintf printf
+#define fiprintf fprintf
+#define siprintf sprintf
+#define sniprintf snprintf
+#endif
+
 #define ceil_f32toint(n) (((n) + ((1 << 12) - 1)) >> 12)
 
 void lowercase(char *str);

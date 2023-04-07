@@ -20,6 +20,7 @@ limitations under the License.
 #include <fat.h>
 #include <sys/types.h>
 #include <sys/dir.h>
+#include <sys/stat.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -247,11 +248,8 @@ void FileSelector::read_directory(void)
 			File newfile;
 			newfile.name = direntry->d_name;
 			newfile.name_with_path = current_directory + direntry->d_name;
-			if(direntry->d_type & DT_DIR)
-				newfile.is_dir = true;
-			else
-				newfile.is_dir = false;
-            
+			newfile.is_dir = (direntry->d_type == DT_DIR);
+
             if(!newfile.is_dir) {
                 int stat_res = stat(newfile.name_with_path.c_str(), &filestats);
                 if(stat_res != -1) {

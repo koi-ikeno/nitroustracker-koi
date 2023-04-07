@@ -39,8 +39,13 @@
 #include "nitrotracker_logo_bin.h"
 #include "nitrotracker_logo_pal_bin.h"
 
+#ifdef BLOCKSDS
+#include "04.img_bin.h"
+#include "04.pal_bin.h"
+#else
 #include "04_img_bin.h"
 #include "04_pal_bin.h"
+#endif
 
 #define max(x,y) ((x)>(y)?(x):(y))
 

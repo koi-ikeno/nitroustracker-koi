@@ -27,6 +27,13 @@ Has rectangular area
 
 #include "theme.h"
 
+#ifdef BLOCKSDS
+#define iprintf printf
+#define fiprintf fprintf
+#define siprintf sprintf
+#define sniprintf snprintf
+#endif
+
 struct Font {
 	u8 width, height;
 	const u8* char_index;
