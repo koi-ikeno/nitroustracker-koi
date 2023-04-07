@@ -339,7 +339,11 @@ void ListBox::draw(void)
 	
 	// Content
 	for(i=0;(i<height/ROW_HEIGHT)&&(scrollpos+i<elements.size());++i) {
-		drawString(elements.at(scrollpos+i).c_str(), contentoffset+2, ROW_HEIGHT*i+2, width-contentoffset-2-SCROLLBAR_WIDTH-2);
+		drawString(elements.at(scrollpos+i).c_str(), contentoffset+2, ROW_HEIGHT*i+2,
+			width-contentoffset-2-SCROLLBAR_WIDTH-2,
+			RGB15(0,0,0)|BIT(15),
+			height-(ROW_HEIGHT*i+4)
+		);
 	}
 	
 	drawBorder();

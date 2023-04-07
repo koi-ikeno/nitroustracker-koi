@@ -99,7 +99,7 @@ class Widget {
 		u16 bgcolor; // Color of the background (for hiding the widget)
 
 		// Draw utility functions
-		void drawString(const char* str, u8 tx, u8 ty, u8 maxwidth=255, u16 color=RGB15(0,0,0)|BIT(15));
+		void drawString(const char* str, u8 tx, u8 ty, u8 maxwidth=255, u16 color=RGB15(0,0,0)|BIT(15), u8 maxheight=255);
 		void drawBox(u8 tx, u8 ty, u8 tw, u8 th, u16 col=RGB15(0,0,0)|BIT(15));
 		void drawFullBox(u8 tx, u8 ty, u8 tw, u8 th, u16 col);
 		void drawBorder(u16 col = RGB15(0,0,0)|BIT(15));

@@ -135,13 +135,15 @@ bool Widget::set_enabled(bool value)
 // Draw utility functions
 
 ITCM_CODE
-void Widget::drawString(const char* str, u8 tx, u8 ty, u8 maxwidth, u16 color)
+void Widget::drawString(const char* str, u8 tx, u8 ty, u8 maxwidth, u16 color, u8 maxheight)
 {
 	// Draw text
 	u8 charidx, i, j;
 	u16 drawpos = 0; u8 col;
 
-	u8 height = font_8x11.height;
+	u8 fontheight = font_8x11.height;
+	u8 height = fontheight;
+	if (height > maxheight) height = maxheight;
 
 	while( (*str != '\0') && (drawpos+6<maxwidth) )
 	{
@@ -149,7 +151,7 @@ void Widget::drawString(const char* str, u8 tx, u8 ty, u8 maxwidth, u16 color)
 		u8 width = font_8x11.char_widths[charidx];
 
 		for(j=0;j<height;++j) {
-			col = font_8x11.data[height*charidx + j];
+			col = font_8x11.data[fontheight*charidx + j];
 			for(i=0;i<8;++i,col>>=1) {
 				// Print a character from the bitmap font
 				// each char is 8 pixels wide, and 8 pixels
