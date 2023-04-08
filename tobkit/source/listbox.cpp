@@ -24,7 +24,7 @@ limitations under the License.
 ListBox::ListBox(u8 _x, u8 _y, u8 _width, u8 _height, uint16 **_vram, u16 n_items,
 	bool _show_numbers, bool _visible, bool _zero_offset)
 	:Widget(_x, _y, _width, _height, _vram, _visible),
-	buttonstate(0), activeelement(0), highlightedelement(-1), scrollpos(0), oldscrollpos(0),
+	buttonstate(0), activeelement(0), highlightedelement(-1), scrollpos(0),
 	show_numbers(_show_numbers),
 	zero_offset(_zero_offset)
 {
@@ -123,6 +123,8 @@ void ListBox::penUp(u8 px, u8 py)
 void ListBox::penMove(u8 px, u8 py)
 {
 	if(buttonstate==SCROLLTHINGY) {
+		u16 oldscrollpos = scrollpos;
+
 		// So this is what GUI code looks like .. Ugh!
 		s16 new_pen_y_on_scrollthingy = py - (y+SCROLLBUTTON_HEIGHT+scrollthingypos);
 		s16 new_scrollthingypos = scrollthingypos + new_pen_y_on_scrollthingy - pen_y_on_scrollthingy;
@@ -223,27 +225,45 @@ void ListBox::clear(void)
 	elements.clear();
 }
 
-void ListBox::highlight(s32 idx)
+void ListBox::scrollTo(u16 idx)
+{
+	u16 oldscrollpos = scrollpos;
+
+	// Scroll down if idx is under the viewport
+	if(scrollpos+height/ROW_HEIGHT-1 < idx) {
+		scrollpos = idx - height/ROW_HEIGHT + 1;
+	}
+
+	// Scroll up if idx is above the viewport
+	if(scrollpos>idx) {
+		scrollpos = idx;
+	}
+
+	if(oldscrollpos != scrollpos) {
+		calcScrollThingy();
+	}
+}
+
+void ListBox::highlight(s32 idx, bool scroll)
 {
 	highlightedelement = idx;
+
+	if(highlightedelement >= 0 && scroll) {
+		scrollTo(idx);
+	}
 
 	draw();
 }
 
-void ListBox::select(u16 idx)
+void ListBox::select(u16 idx, bool scroll)
 {
 	activeelement = idx;
-	
-	// Scroll down if activeelement is under the viewport
-	if(scrollpos+height/ROW_HEIGHT-1 < activeelement) {
-		scrollpos = activeelement - height/ROW_HEIGHT + 1;
+
+	if(scroll) {
+		scrollTo(idx);
 	}
-	
-	// Scroll up if activeelement is above the viewport
-	if(scrollpos>activeelement) {
-		scrollpos = activeelement;
-	}
-	
+
+	calcScrollThingy();
 	draw();
 }
 
@@ -253,8 +273,6 @@ void ListBox::draw(void)
 {
 	if(!isExposed())
 		return;
-
-	calcScrollThingy();
 
 	u16 rows_displayed = (height-1)/ROW_HEIGHT;
 	u16 i;

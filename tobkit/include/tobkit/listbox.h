@@ -57,11 +57,12 @@ class ListBox: public Widget {
 		const char *get(u16 idx);
 		u16 getidx(void); // get index of selected element
 		void clear(void);
-		void select(u16 idx); // set selected element
-		void highlight(s32 idx); // set highlighted element, <0 disables
+		void select(u16 idx, bool scroll=true); // set selected element
+		void highlight(s32 idx, bool scroll=true); // set highlighted element, <0 disables
 
 	protected:
 		void draw(void);
+		void scrollTo(u16 idx);
 		// Calculate height and position of the scroll thingy
 		void calcScrollThingy(void);
 
@@ -70,7 +71,7 @@ class ListBox: public Widget {
 		u8 buttonstate;
 		u16 activeelement;
 		s32 highlightedelement;
-		u16 scrollpos, oldscrollpos;
+		u16 scrollpos;
 		u16 scrollthingypos, scrollthingyheight, pen_y_on_scrollthingy;
 		bool show_numbers, zero_offset; // zero_offset: If false, offset=1
 		std::vector<std::string> elements;

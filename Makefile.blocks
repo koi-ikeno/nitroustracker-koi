@@ -11,7 +11,7 @@ BLOCKSDSEXT	?= /opt/blocksds/external
 NAME		:= nitrotracker
 
 GAME_TITLE	:= NitroTracker
-GAME_SUBTITLE	:= v0.4.3-unofficial
+GAME_SUBTITLE	:= v0.4.4-unofficial
 GAME_ICON	:= icon.bmp
 
 # DLDI and internal SD slot of DSi

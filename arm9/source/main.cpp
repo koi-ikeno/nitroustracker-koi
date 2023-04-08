@@ -1193,8 +1193,8 @@ bool potGoto(u8 pos)
 	if(state->playing == true) {
 		if (tbqueuelock->getState()) {
 			state->queued_potpos = pos;
-			lbpot->highlight(state->queued_potpos);
-			lbpot->select(state->potpos);
+			lbpot->select(state->potpos, false);
+			lbpot->highlight(state->queued_potpos, true);
 			return false;
 		} else {
 			state->potpos = pos;
@@ -1257,7 +1257,7 @@ void handlePotPosChangeFromSong(u16 newpotpos)
 
 		CommandStartPlay(state->potpos, state->row, true);
 		state->queued_potpos = -1;
-		lbpot->highlight(state->queued_potpos);
+		lbpot->highlight(state->queued_potpos, false);
 	} else {
 		state->potpos = newpotpos;
 		state->row = 0;
@@ -2483,7 +2483,7 @@ void toggleQueueLock(bool is_active)
 {
 	if(!is_active) {
 		state->queued_potpos = -1;
-		lbpot->highlight(state->queued_potpos);
+		lbpot->highlight(state->queued_potpos, false);
 	}
 }
 

@@ -8,11 +8,11 @@ BLOCKSDSEXT	?= /opt/blocksds/external
 # Source code paths
 # -----------------
 
-SOURCEDIRS	:= arm9/source common/source
-INCLUDEDIRS	:= common/include
-GFXDIRS		:= arm9/graphics
+SOURCEDIRS	:= arm9/source
+INCLUDEDIRS	:=
+GFXDIRS		:=
 BINDIRS		:= arm9/data
-AUDIODIRS	:= arm9/audio
+AUDIODIRS	:=
 FONTSDIRS	:= arm9/fonts
 BITMAPSDIRS	:= arm9/bitmaps
 TOOLSDIR	:= tools
