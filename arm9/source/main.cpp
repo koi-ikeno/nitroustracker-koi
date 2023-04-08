@@ -2734,32 +2734,32 @@ void setupGUI(bool dldi_enabled)
 		buttonmorechannels->setCaption("+");
 		buttonmorechannels->registerPushCallback(handleChannelAdd);
 
-		labeltempo = new Label(4, 101, 32, 12, &sub_vram, false);
+		labeltempo = new Label(4, 103, 32, 12, &sub_vram, false);
 		labeltempo->setCaption("tmp");
-		labelbpm = new Label(38, 101, 32, 12, &sub_vram, false);
+		labelbpm = new Label(38, 103, 32, 12, &sub_vram, false);
 		labelbpm->setCaption("bpm");
-		labelrestartpos = new Label(72, 101, 46, 12, &sub_vram, false);
+		labelrestartpos = new Label(72, 103, 46, 12, &sub_vram, false);
 		labelrestartpos->setCaption("restart");
-		nbtempo = new NumberBox(4, 113, 32, 17, &sub_vram, 1, 1, 31);
+		nbtempo = new NumberBox(4, 115, 32, 17, &sub_vram, 1, 1, 31);
 		nbtempo->registerChangeCallback(handleTempoChange);
 #ifdef DEBUG
-		nsbpm = new NumberSlider(38, 113, 32, 17, &sub_vram, 120, 1, 255);
+		nsbpm = new NumberSlider(38, 115, 32, 17, &sub_vram, 120, 1, 255);
 #else
-		nsbpm = new NumberSlider(38, 113, 32, 17, &sub_vram, 120, 32, 255);
+		nsbpm = new NumberSlider(38, 115, 32, 17, &sub_vram, 120, 32, 255);
 #endif
 		nsbpm->registerChangeCallback(handleBpmChange);
-		nsrestartpos = new NumberSlider(72, 113, 32, 17, &sub_vram, 0, 0, 255, true);
+		nsrestartpos = new NumberSlider(72, 115, 32, 17, &sub_vram, 0, 0, 255, true);
 		nsrestartpos->registerChangeCallback(handleRestartPosChange);
 
-		labelsongname = new Label(4, 132, 113, 14, &sub_vram, true);
+		labelsongname = new Label(4, 134, 113, 14, &sub_vram, true);
 		labelsongname->setCaption("unnamed");
 		labelsongname->registerPushCallback(showTypewriterForSongRename);
 
-		buttonrenamesong = new Button(118, 132, 20, 14, &sub_vram);
+		buttonrenamesong = new Button(118, 134, 20, 14, &sub_vram);
 		buttonrenamesong->setCaption("...");
 		buttonrenamesong->registerPushCallback(showTypewriterForSongRename);
 
-		buttonzap = new Button(107, 114, 30, 14, &sub_vram);
+		buttonzap = new Button(107, 116, 30, 14, &sub_vram);
 		buttonzap->setCaption("zap!");
 		buttonzap->registerPushCallback(handleZap);
 

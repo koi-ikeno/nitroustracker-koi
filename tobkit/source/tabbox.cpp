@@ -167,7 +167,7 @@ void TabBox::draw(void)
 
 	if (orientation == TABBOX_ORIENTATION_TOP) {
 		// Draw box
-		drawFullBox(1, size_full, width-2, height-(size_border+2), theme->col_light_bg);
+		drawFullBox(1, size_full+1, width-2, height-(size_border+2), theme->col_light_bg);
 		drawBox(0, size_border, width, height-size_border);
 		
 		// Draw tabs
