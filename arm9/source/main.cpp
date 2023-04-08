@@ -2680,11 +2680,11 @@ void setupGUI(bool dldi_enabled)
 		buttondelfile->setCaption("del");
 		buttondelfile->registerPushCallback(handleDelfile);
 
-		labelFilename = new Label(3, 134, 95, 14, &sub_vram);
+		labelFilename = new Label(3, 134, 97, 14, &sub_vram);
 		labelFilename->setCaption("");
 		labelFilename->registerPushCallback(showTypewriterForFilename);
 
-		buttonchangefilename = new Button(100, 134, 22, 14, &sub_vram);
+		buttonchangefilename = new Button(101, 134, 22, 14, &sub_vram);
 		buttonchangefilename->setCaption("...");
 		buttonchangefilename->registerPushCallback(showTypewriterForFilename);
 
