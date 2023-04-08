@@ -193,19 +193,13 @@ std::string stringtolowercase(std::string str)
 
 inline bool compare_filenames(File f1, File f2)
 {
-	bool res;
-
-	if((f1.is_dir)&&(!f2.is_dir)) {
-		res = true;
-	} else if ((!f1.is_dir)&&(f2.is_dir)) {
-		res = false;
+	if(f1.order != f2.order) {
+		return f1.order < f2.order;
 	} else if(strcasecmp(f1.name.c_str(),f2.name.c_str())<0) {
-		res = true;
+		return true;
 	} else {
-		res = false;
+		return false;
 	}
-
-	return res;
 }
 
 // Reads the current directory
@@ -242,6 +236,7 @@ void FileSelector::read_directory(void)
 			newfile.name = direntry->d_name;
 			newfile.name_with_path = current_directory + direntry->d_name;
 			newfile.is_dir = (direntry->d_type == DT_DIR);
+			newfile.order = newfile.is_dir ? 1 : 2;
 
             if(!newfile.is_dir) {
                 int stat_res = stat(newfile.name_with_path.c_str(), &filestats);
@@ -288,6 +283,7 @@ void FileSelector::read_directory(void)
 		File dotdot;
 		dotdot.name = "..";
 		dotdot.is_dir = true;
+		dotdot.order = 0;
 		dotdot.size = 0;
 		filelist.push_back(dotdot);
 	}

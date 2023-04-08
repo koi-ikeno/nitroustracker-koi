@@ -30,6 +30,7 @@ class File {
 	public:
 		std::string name;
 		std::string name_with_path;
+		u8 order;
 		bool is_dir;
 		u32 size;
 };

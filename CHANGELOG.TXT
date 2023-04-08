@@ -15,6 +15,7 @@ Improvements:
 Fixes:
 
 - fixed sample tune value not displaying correctly for values below -99
+- fixed some directories being above ".." in file selector
 - general minor visual glitch fixes
 
 -- v0.4.4-unofficial (2023-04-07)
