@@ -1,24 +1,23 @@
 
-     NitroTracker-unofficial
-     -----------------------
+      NitrousTracker v0.4.5
+     --------------------------------
+     original by 0xtob ^ 0x80
+          modifications by asie & co.
 
 -- About
 
-NitroTracker is a FastTracker II style tracker for the
-Nintendo DS. If you didn't understand that, you might
-want to read up on trackers. For starters, NitroTracker
-is a versatile tool for creating music - everywhere! It
-supports the popular XM file format that is used by many
-PC trackers and that can be played on many PC audio
-players such as Winamp or XMMS.
-
-NitroTracker-unofficial is a fork of the project, whose
-goal is to improve the usability of the tracker, 12 years
-since its final official release.
+NitrousTracker is a fork of NitroTracker, a FastTracker II
+style tracker for the Nintendo DS originally created by
+0xtob. If you didn't understand that, you might want to
+read up on trackers. For starters, NitrousTracker is a
+versatile tool for creating music - everywhere! It supports
+the popular XM file format that is used by many PC trackers
+and that can be played on many PC audio players such as
+Winamp or XMMS.
 
 -- Installation
 
-Copy NitroTracker and some music and samples to
+Copy NitrousTracker and some music and samples to
 any folder of your memory card and start tracking!
 
 -- Community
@@ -27,7 +26,7 @@ Forum:
 
     http://modarchive.org/forums/index.php?board=79.0
 
--- I want *you* for NitroTracker!
+-- I want *you* for NitrousTracker!
 
 What you can do:
 
@@ -45,7 +44,7 @@ What you can do:
 
         https://github.com/0xtob/nitrotracker/issues
 
-    Become a NitroTracker developer!
+    Become a NitrousTracker developer!
 
         The source and all the info on how to get started is here:
 
@@ -55,7 +54,7 @@ What you can do:
 
 -- Contact
 
-Get in touch with other NitroTracker users in the official
+Get in touch with other NitrousTracker users in the official
 The NitroTracker Forum (see above).
 
 -- Thanks
@@ -67,10 +66,13 @@ I'd also like to thank reinvdwoerd for their original
 work and ideas regarding improving NitroTracker, started
 shortly prior to my own work!
 
-Finally, as always, the devkitPro group members - without
-their tireless work, all of this would be a lot harder.
+AntonioND's BlocksDS toolchain has allowed incorporating
+many long put off backend improvements. It builds on the
+work of many giants, including the dozens of contributors
+to devkitPro-maintained libraries comprising the devkitARM
+toolchain, who should also be thanked and acknowledged.
 
-0xtob thanks:
+0xtob originally thanked:
 
 There is quite a bunch of people that made the development
 of this project possible or easier. First of all, a huge

@@ -1,3 +1,22 @@
+-- NitrousTracker v0.4.5 (??)
+
+New features:
+
+- nowifi build: ~100K more free RAM, but no dsmidiwifi support
+- scroll lock: loop pattern + detach cursor from song playback
+  - the old "loop ptn" option has been moved to the pattern/song tab
+
+Improvements:
+
+- general layout adjustments
+- shaved ~10K more from the filesize/starting RAM usage
+- the "sel" button can now be used to clear a selectiont
+
+Fixes:
+
+- fixed sample tune value not displaying correctly for values below -99
+- general minor visual glitch fixes
+
 -- v0.4.4-unofficial (2023-04-07)
 
 New features:
