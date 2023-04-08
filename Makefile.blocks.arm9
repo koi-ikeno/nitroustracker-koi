@@ -43,8 +43,13 @@ ifeq ($(DEBUG),true)
 BUILDDIR	:= build/arm9d
 NAME		:= arm9d
 else
+ifeq ($(WIFI),true)
 BUILDDIR	:= build/arm9
 NAME		:= arm9
+else
+BUILDDIR	:= build/arm9l
+NAME		:= arm9l
+endif
 endif
 ELF		:= build/$(NAME).elf
 DUMP		:= build/$(NAME).dump
@@ -108,6 +113,9 @@ ifeq ($(DEBUG),true)
 DEFINES		+= -DDEBUG
 else
 DEFINES		+= -DNDEBUG
+endif
+ifeq ($(WIFI),true)
+DEFINES		+= -DWIFI
 endif
 
 ARCH		:= -march=armv5te -mtune=arm946e-s

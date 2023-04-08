@@ -27,7 +27,6 @@ LIBS		:= -lntxm7 -ldswifi7 -lnds7 -lstdc++ -lc
 endif
 LIBDIRS		:= $(BLOCKSDS)/libs/libnds \
 		   $(BLOCKSDS)/libs/dswifi \
-		   dsmi/ds/libdsmi \
 		   libntxm/libntxm
 
 # Build artifacts
@@ -37,8 +36,13 @@ ifeq ($(DEBUG),true)
 BUILDDIR	:= build/arm7d
 NAME		:= arm7d
 else
+ifeq ($(WIFI),true)
 BUILDDIR	:= build/arm7
 NAME		:= arm7
+else
+BUILDDIR	:= build/arm7l
+NAME		:= arm7l
+endif
 endif
 ELF		:= build/$(NAME).elf
 DUMP		:= build/$(NAME).dump
@@ -83,6 +87,9 @@ ifeq ($(DEBUG),true)
 DEFINES		+= -DDEBUG
 else
 DEFINES		+= -DNDEBUG
+endif
+ifeq ($(WIFI),true)
+DEFINES		+= -DWIFI
 endif
 
 ARCH		:= -mcpu=arm7tdmi -mtune=arm7tdmi

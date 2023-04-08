@@ -24,7 +24,6 @@
 
 #define GURU // Show guru meditations
 //#define SPLASH
-#define WIFI
 #define USE_FAT
 
 #include <nds.h>
@@ -100,8 +99,10 @@
 #include "action.h"
 
 #include <fat.h>
+#ifdef WIFI
 #include <libdsmi.h>
 #include <dswifi9.h>
+#endif
 
 #define EXTERNAL_DATA(name) \
   extern const uint8  name[]; \
@@ -2985,6 +2986,7 @@ void setupGUI(bool dldi_enabled)
 		rbghandedness->setActive(1);
 		rbghandedness->registerChangeCallback(handleHandednessChange);
 
+#ifdef WIFI
 		gbdsmw = new GroupBox(5, 55, 80, 54, &sub_vram);
 		gbdsmw->setText("dsmidiwifi");
 
@@ -2996,6 +2998,7 @@ void setupGUI(bool dldi_enabled)
 
 		cbdsmwrecv = new CheckBox(7, 97, 40, 14, &sub_vram, true, true);
 		cbdsmwrecv->setCaption("receive");
+#endif
 
 		gboutput = new GroupBox(89, 23, 40, 34, &sub_vram);
 		gboutput->setText("out");
@@ -3019,12 +3022,14 @@ void setupGUI(bool dldi_enabled)
 #endif
 		tabbox->registerWidget(rblefthanded, 0, 4);
 		tabbox->registerWidget(rbrighthanded, 0, 4);
+#ifdef WIFI
 		tabbox->registerWidget(cbdsmwsend, 0, 4);
 		tabbox->registerWidget(cbdsmwrecv, 0, 4);
 		tabbox->registerWidget(btndsmwtoggleconnect, 0, 4);
+		tabbox->registerWidget(gbdsmw, 0, 4);
+#endif
 		tabbox->registerWidget(btnconfigsave, 0, 4);
 		tabbox->registerWidget(gbhandedness, 0, 4);
-		tabbox->registerWidget(gbdsmw, 0, 4);
 		tabbox->registerWidget(rboutputmono, 0, 4);
 		tabbox->registerWidget(rboutputstereo, 0, 4);
 		tabbox->registerWidget(gboutput, 0, 4);

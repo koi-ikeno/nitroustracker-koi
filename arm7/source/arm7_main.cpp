@@ -30,8 +30,6 @@ extern "C" {
   #include "ntxm/linear_freq_table.h"
 }
 
-#define WIFI
-
 #ifdef WIFI
 #include <dswifi7.h>
 #endif
