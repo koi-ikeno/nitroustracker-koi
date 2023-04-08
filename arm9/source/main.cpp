@@ -2726,10 +2726,10 @@ void setupGUI(bool dldi_enabled)
 
 		labelchannels = new Label(87, 22, 48, 12, &sub_vram, false);
 		labelchannels->setCaption("chn:  4");
-		buttonlesschannels = new Button(111, 33, 12, 12, &sub_vram);
+		buttonlesschannels = new Button(111, 34, 12, 12, &sub_vram);
 		buttonlesschannels->setCaption("-");
 		buttonlesschannels->registerPushCallback(handleChannelDel);
-		buttonmorechannels = new Button(125, 33, 12, 12, &sub_vram);
+		buttonmorechannels = new Button(125, 34, 12, 12, &sub_vram);
 		buttonmorechannels->setCaption("+");
 		buttonmorechannels->registerPushCallback(handleChannelAdd);
 
