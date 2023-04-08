@@ -248,7 +248,7 @@ void PatternView::draw(void)
 		// Calculate dimensions in screen coords
 		sel_screen_x1 = PV_BORDER_WIDTH + (sel_x - hscrollpos) * getCellWidth();
 		sel_screen_x2 = sel_screen_x1 + sel_w * getCellWidth();
-		sel_screen_y1 = (sel_y - state->row + getCursorBarPos()) * PV_CELL_HEIGHT;
+		sel_screen_y1 = (sel_y - state->getCursorRow() + getCursorBarPos()) * PV_CELL_HEIGHT;
 		sel_screen_y2 = sel_screen_y1 + sel_h * PV_CELL_HEIGHT;
 		
 		// Does an intersection with the screen exist?
@@ -280,7 +280,7 @@ void PatternView::draw(void)
 	s16 realrow;
 	u16 ptnlen = song->getPatternLength(song->getPotEntry(state->potpos));
 	for(u16 i=0; i<=getNumVisibleRows(); ++i) {
-		realrow = i-getCursorBarPos()+state->row;
+		realrow = i-getCursorBarPos()+state->getCursorRow();
 	
 		if((realrow>=0)&&(realrow<=ptnlen)) {
 			if(realrow%PV_CELL_HEIGHT==0) {
@@ -297,9 +297,8 @@ void PatternView::draw(void)
 		drawVLine(PV_BORDER_WIDTH-1+i*getCellWidth(), 0, width-PV_BORDER_WIDTH, linescol);
 	}
 	
-	// Cursor bar
-	drawBox(0, PV_CURSORBAR_Y, getEffectiveWidth(), PV_CELL_HEIGHT+1);
-	drawGradient(cb_col1, cb_col2, 1, PV_CURSORBAR_Y+1, getEffectiveWidth()-2, PV_CELL_HEIGHT-1);
+	// Cursor bar (highlight)
+	drawGradient(cb_col1, cb_col2, 0, PV_CURSORBAR_Y, getEffectiveWidth(), PV_CELL_HEIGHT);
 	if(selection_exists == true) {
 		// Cursor bar (highlighted component)
 		if (	(sel_screen_y1 <= PV_CURSORBAR_Y + 1)
@@ -310,7 +309,13 @@ void PatternView::draw(void)
 				drawFullBox(cursor_highlight_x1, PV_CURSORBAR_Y+1, sel_screen_x2 - cursor_highlight_x1 - 1, PV_CELL_HEIGHT-1, cb_sel_highlight);
 		}
 	}
-	
+
+	// Playback box
+	int playback_box_y = PV_CURSORBAR_Y + (state->getPlaybackRow()-state->getCursorRow())*PV_CELL_HEIGHT;
+	if (playback_box_y >= 0 && playback_box_y < 192) {
+		drawBox(0, playback_box_y, getEffectiveWidth(), PV_CELL_HEIGHT+1);
+	}
+
 	// Cursor
 	drawBox(PV_BORDER_WIDTH-1+(state->channel-hscrollpos)*getCellWidth(), PV_CURSORBAR_Y, getCellWidth()+1, PV_CELL_HEIGHT+1);
 	drawGradient(cb_col1_highlight, cb_col2_highlight, PV_BORDER_WIDTH+(state->channel-hscrollpos)*getCellWidth(),
@@ -318,21 +323,21 @@ void PatternView::draw(void)
 	
 	// Numbers on the left
 	s16 ip;
-	for(ip=state->row-getCursorBarPos();ip<=state->row+getCursorBarPos()+1;++ip) {
-		if((ip>=0)&&(ip<song->getPatternLength(song->getPotEntry(state->potpos)))) {
-			drawHexByte(ip, 1, 2+(ip+getCursorBarPos()-state->row)*PV_CHAR_HEIGHT, col_left_numbers);
+	for(ip=state->getCursorRow()-getCursorBarPos();ip<=state->getCursorRow()+getCursorBarPos()+1;++ip) {
+		if((ip>=0)&&(ip<ptnlen)) {
+			drawHexByte(ip, 1, 2+(ip+getCursorBarPos()-state->getCursorRow())*PV_CHAR_HEIGHT, col_left_numbers);
 		}
 	}
 	
 	// Pattern data
-	s16 firstrow = state->row-getCursorBarPos();
+	s16 firstrow = state->getCursorRow()-getCursorBarPos();
 	int highlight_row = getNumVisibleRows() / 2 - 1;
 	
 	for(u16 i=0;i<getNumVisibleChannels();++i)
 	{
 		for(u16 j=0;j<getNumVisibleRows();++j)
 		{
-			if((firstrow+j>=0)&&(firstrow+j<song->getPatternLength(song->getPotEntry(state->potpos))))
+			if((firstrow+j>=0)&&(firstrow+j<ptnlen))
 			{
 				//drawCell(hscrollpos+i, firstrow+j, (i*getCellWidth()+PV_BORDER_WIDTH+2)/PV_CHAR_WIDTH/*i*14+3*/, j);
 				if(j == highlight_row)
@@ -420,7 +425,7 @@ bool PatternView::pickCell(u8 px, u8 py, u16 *cx, u16 *cy)
 		u8 realx = px - (x+PV_BORDER_WIDTH);
 		u8 realy = py - y - 1;
 		s32 cellx = realx / getCellWidth() + hscrollpos;
-		s32 celly = realy / PV_CELL_HEIGHT - getCursorBarPos() + state->row;
+		s32 celly = realy / PV_CELL_HEIGHT - getCursorBarPos() + state->getCursorRow();
 		if((celly < 0) || (celly >= song->getPatternLength(song->getPotEntry(state->potpos)))) {
 			return false;
 		}

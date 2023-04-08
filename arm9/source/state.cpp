@@ -47,6 +47,7 @@ void State::resetSong(void) // resets only song-specific settings
 	potpos = 0;
 	queued_potpos = -1;
 	row = 0;
+	cursor_row = 0;
 	channel = 0;
 	add = 1;
 	basenote = 4*12;
@@ -56,4 +57,5 @@ void State::resetSong(void) // resets only song-specific settings
 	playing = false;
 	pause = false;
 	map_samples = false;
+	scroll_lock = false;
 }

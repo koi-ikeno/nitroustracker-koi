@@ -39,13 +39,17 @@ class State {
 		void reset(void);
 		void resetSong(void); // resets only song-specific settings
 
+		inline u16 getPlaybackRow() { return this->row; }
+		inline void setPlaybackRow(u16 row) { this->row = row; if(!scroll_lock) { this->cursor_row = row; } }
+		inline u16 getCursorRow() { return this->cursor_row; }
+		inline void setCursorRow(u16 row) { this->cursor_row = row; }
+
 		char *song_filename;
 		char *sample_filename;
 
 		Sample *preview_sample;
 
 		s16 queued_potpos;
-		u16 row;
 		u8 potpos;
 		u8 channel;
 
@@ -62,6 +66,11 @@ class State {
 		bool dsmi_recv;
 
 		bool map_samples;
+		bool scroll_lock;
+
+	private:
+		u16 row;
+		u16 cursor_row;
 };
 
 #endif

@@ -144,7 +144,7 @@ GUI *gui;
 	Button *buttonrenameinst, *buttonrenamesample, *buttontest, *buttonstopnote, *buttonemptynote, *buttondelnote, *buttoninsnote2,
 		*buttondelnote2, *buttoninsnote;
 	BitButton *buttonswitchsub, *buttonplay, *buttonstop, *buttonpause;
-	CheckBox *cbloop;
+	CheckBox *cbscrolllock;
 	ToggleButton *tbrecord, *tbmultisample;
 	Label *labeladd, *labeloct;
 	NumberBox *numberboxadd, *numberboxoctave;
@@ -171,7 +171,7 @@ GUI *gui;
 	ListBox *lbpot;
 	Button *buttonpotup, *buttonpotdown, *buttoncloneptn,
 		*buttonmorechannels, *buttonlesschannels, *buttonzap, *buttonrenamesong;
-	ToggleButton *tbqueuelock;
+	ToggleButton *tbqueuelock, *tbpotloop;
 	NumberBox *nbtempo;
 	NumberSlider *nsptnlen, *nsbpm, *nsrestartpos;
 	MemoryIndicator *memoryiindicator;
@@ -323,10 +323,12 @@ void updateKeyLabels(void)
 static void handleNoteAdvanceRow(void)
 {
 	// Check if we are not at the bottom and only scroll down as far as possible
-	if((state->playing == false)||(state->pause==true))
+	if((state->playing == false)||(state->pause==true)||state->scroll_lock)
 	{
-		state->row += state->add;
-		state->row %= song->getPatternLength(song->getPotEntry(state->potpos));
+		u16 row = state->getCursorRow();
+		row += state->add;
+		row %= song->getPatternLength(song->getPotEntry(state->potpos));
+		state->setCursorRow(row);
 	}
 }
 
@@ -353,7 +355,7 @@ static bool uiPotSelection(u16 *sel_x1, u16 *sel_y1, u16 *sel_x2, u16 *sel_y2, b
 	if (!is_box)
 	{
 		*sel_x1 = *sel_x2 = state->channel;
-		*sel_y1 = *sel_y2 = state->row;
+		*sel_y1 = *sel_y2 = state->getCursorRow();
 	}
 	else
 	{
@@ -372,10 +374,10 @@ void handleNoteFill(u8 note)
 	{
 		// smaller cell set
 		Cell targetCell = getChangedNote(
-			song->getPattern(song->getPotEntry(state->potpos))[state->channel][state->row], note
+			song->getPattern(song->getPotEntry(state->potpos))[state->channel][state->getCursorRow()], note
 		);
 
-        action_buffer->add(song, new SingleCellSetAction(state, state->channel, state->row, targetCell));
+        action_buffer->add(song, new SingleCellSetAction(state, state->channel, state->getCursorRow(), targetCell));
 		handleNoteAdvanceRow();
 		return;
 	}
@@ -400,7 +402,7 @@ void handleNoteStroke(u8 note)
 	if(state->recording == true)
 	{
 		// TODO: restore pattern setting while preserving undo
-		/* uiSetNote(state->channel, state->row, note);
+		/* uiSetNote(state->channel, state->getCursorRow(), note);
 
 		// Redraw
 		DC_FlushAll();
@@ -441,8 +443,8 @@ void handleNoteRelease(u8 note, bool moved)
 	// If we are recording
 	if((state->recording == true) && !moved)
 	{
-		Cell newCell = getChangedNote(song->getPattern(song->getPotEntry(state->potpos))[state->channel][state->row], note);
-		action_buffer->add(song, new SingleCellSetAction(state, state->channel, state->row, newCell));
+		Cell newCell = getChangedNote(song->getPattern(song->getPotEntry(state->potpos))[state->channel][state->getCursorRow()], note);
+		action_buffer->add(song, new SingleCellSetAction(state, state->channel, state->getCursorRow(), newCell));
 
 		// Advance row
 		handleNoteAdvanceRow();
@@ -673,7 +675,8 @@ void setSong(Song *newsong)
 	updateTempoAndBpm();
 	nsptnlen->setValue(song->getPatternLength(song->getPotEntry(state->potpos)));
 	nsrestartpos->setValue(song->getRestartPosition());
-	cbloop->setChecked(false);
+	tbqueuelock->setState(false);
+	tbpotloop->setState(false);
 
 	numberboxadd->setValue(state->add);
 	numberboxoctave->setValue(state->basenote/12);
@@ -1130,7 +1133,7 @@ void startPlay(void)
 	if(state->pause == false)
 		CommandStartPlay(state->potpos, 0, true);
 	else
-		CommandStartPlay(state->potpos, state->row, true);
+		CommandStartPlay(state->potpos, state->getCursorRow(), true);
 
 	state->playing = true;
 	state->pause = false;
@@ -1169,7 +1172,7 @@ void stop(void)
 void stopPlay(void)
 {
 	state->pause = false;
-	state->row = 0;
+	state->setPlaybackRow(0);
 
 	stop();
 
@@ -1198,15 +1201,15 @@ bool potGoto(u8 pos)
 			return false;
 		} else {
 			state->potpos = pos;
-			state->row = 0;
+			state->setPlaybackRow(0);
 			if (state->pause == false) {
-				CommandStartPlay(state->potpos, state->row, true);
+				CommandStartPlay(state->potpos, state->getPlaybackRow(), true);
 			}
 			return true;
 		}
 	} else {
 		state->potpos = pos;
-		state->row = 0;
+		state->setPlaybackRow(0);
 		return true;
 	}
 }
@@ -1253,14 +1256,14 @@ void handlePotPosChangeFromSong(u16 newpotpos)
 {
 	if (state->queued_potpos >= 0) {
 		state->potpos = state->queued_potpos;
-		state->row = 0;
+		state->setPlaybackRow(0);
 
-		CommandStartPlay(state->potpos, state->row, true);
+		CommandStartPlay(state->potpos, state->getPlaybackRow(), true);
 		state->queued_potpos = -1;
 		lbpot->highlight(state->queued_potpos, false);
 	} else {
 		state->potpos = newpotpos;
-		state->row = 0;
+		state->setPlaybackRow(0);
 	}
 
 	// Update lbpot
@@ -1481,8 +1484,11 @@ void handlePtnLengthChange(s32 newlength)
 		song->resizePattern(song->getPotEntry(state->potpos), newlength);
 		DC_FlushAll();
 		// Scroll back if necessary
-		if(state->row >= newlength) {
-			state->row = newlength-1;
+		if(state->getPlaybackRow() >= newlength) {
+			state->setPlaybackRow(newlength-1);
+		}
+		if(state->getCursorRow() >= newlength) {
+			state->setCursorRow(newlength-1);
 		}
 		redraw_main_requested = true;
 	}
@@ -1525,7 +1531,8 @@ void zapPatterns(void)
 	updateGuiToNewPattern(0);
 
 	state->potpos = 0;
-	state->row = 0;
+	state->setPlaybackRow(0);
+	state->setCursorRow(0);
 	state->channel = 0;
 
 	redraw_main_requested = false;
@@ -1576,9 +1583,9 @@ void handleZap(void)
 	mb->reveal();
 }
 
-void handleNewRow(u16 row)
+void handleRowChangeFromSong(u16 row)
 {
-	state->row = row;
+	state->setPlaybackRow(row);
 
 	if(!state->playing)
 		return;
@@ -1597,7 +1604,7 @@ void handleNewRow(u16 row)
 			if(song->channelMuted(chn))
 				continue;
 
-			curr_cell = &(pattern[chn][state->row]);
+			curr_cell = &(pattern[chn][state->getCursorRow()]);
 
 			if(curr_cell->note == 254) // Note off
 			{
@@ -1839,6 +1846,17 @@ void handleTypewriterSampleOk(void)
 	lbsamples->set( lbsamples->getidx(), tw->getText() );
 
 	deleteTypewriter();
+}
+
+void handleLoopToggle(bool on)
+{
+	CommandSetPatternLoop(on || state->scroll_lock);
+}
+
+void handleToggleScrollLock(bool on)
+{
+	state->scroll_lock = on;
+	handleLoopToggle(tbpotloop->getState());
 }
 
 void handleToggleMultiSample(bool on)
@@ -2170,7 +2188,7 @@ void handleCopy(void)
 void handlePaste(void)
 {
 	if(clipboard != NULL) {
-		action_buffer->add(song, new MultipleCellSetAction(state, state->channel, state->row, clipboard, true));
+		action_buffer->add(song, new MultipleCellSetAction(state, state->channel, state->getCursorRow(), clipboard, true));
 	}
 
 	redraw_main_requested = true;
@@ -2361,11 +2379,6 @@ void sample_reverse(void)
 	DC_FlushAll();
 
 	sampledisplay->setSample(smp);
-}
-
-void handleLoopToggle(bool state)
-{
-	CommandSetPatternLoop(state);
 }
 
 void sampleTabBoxChage(u8 tab)
@@ -2699,24 +2712,27 @@ void setupGUI(bool dldi_enabled)
 		lbpot = new ListBox(4, 21, 50, 78, &sub_vram, 1, true);
 		lbpot->set(0," 0");
 		lbpot->registerChangeCallback(handlePotPosChangeFromUser);
-		buttonpotup = new Button(70, 47, 12, 12, &sub_vram);
+		buttonpotup = new Button(71, 47, 14, 12, &sub_vram);
 		buttonpotup->setCaption(">");
 		buttonpotup->registerPushCallback(handlePotInc);
-		buttonpotdown = new Button(56, 47, 12, 12, &sub_vram);
+		buttonpotdown = new Button(55, 47, 14, 12, &sub_vram);
 		buttonpotdown->setCaption("<");
 		buttonpotdown->registerPushCallback(handlePotDec);
-		buttonins = new Button(56, 21, 26, 12, &sub_vram);
+		buttonins = new Button(55, 21, 29, 12, &sub_vram);
 		buttonins->setCaption("ins");
 		buttonins->registerPushCallback(handlePotIns);
-		buttondel = new Button(56, 60, 26, 12, &sub_vram);
+		buttondel = new Button(55, 60, 29, 12, &sub_vram);
 		buttondel->setCaption("del");
 		buttondel->registerPushCallback(handlePotDel);
-		buttoncloneptn = new Button(56, 34, 26, 12, &sub_vram);
+		buttoncloneptn = new Button(55, 34, 29, 12, &sub_vram);
 		buttoncloneptn->setCaption("cln");
 		buttoncloneptn->registerPushCallback(handlePtnClone);
-		tbqueuelock = new ToggleButton(56, 73, 26, 12, &sub_vram, true);
+		tbqueuelock = new ToggleButton(55, 73, 29, 12, &sub_vram, true);
 		tbqueuelock->setCaption("lock");
 		tbqueuelock->registerToggleCallback(toggleQueueLock);
+		tbpotloop = new ToggleButton(55, 86, 29, 12, &sub_vram, true);
+		tbpotloop->setCaption("loop");
+		tbpotloop->registerToggleCallback(handleLoopToggle);
 
 		labelptnlen = new Label(87, 48, 50, 12, &sub_vram, false);
 		labelptnlen->setCaption("ptn len:");
@@ -2773,6 +2789,7 @@ void setupGUI(bool dldi_enabled)
 		tabbox->registerWidget(buttondel, 0, 0);
 		tabbox->registerWidget(buttoncloneptn, 0, 0);
 		tabbox->registerWidget(tbqueuelock, 0, 0);
+		tabbox->registerWidget(tbpotloop, 0, 0);
 		tabbox->registerWidget(nsptnlen, 0, 0);
 		tabbox->registerWidget(labelptnlen, 0, 0);
 		tabbox->registerWidget(labelchannels, 0, 0);
@@ -3057,13 +3074,12 @@ void setupGUI(bool dldi_enabled)
 	buttonundo->registerPushCallback(undoOp);
 	buttonredo->registerPushCallback(redoOp);
 
-	cbloop = new CheckBox(178, 19, 30, 12, &sub_vram, true, false, true);
+	cbscrolllock = new CheckBox(178, 19, 30, 12, &sub_vram, true, false, true);
+	cbscrolllock->setCaption("scrl lock");
+	cbscrolllock->registerToggleCallback(handleToggleScrollLock);
 
-	cbloop->setCaption("loop ptn");
-	cbloop->registerToggleCallback(handleLoopToggle);
-
-	tbrecord = new ToggleButton(140, 138, 14, 14, &sub_vram);
-	tbrecord->setBitmap(icon_record_raw, 10, 10);
+	tbrecord = new ToggleButton(140, 136, 16, 16, &sub_vram);
+	tbrecord->setBitmap(icon_record_raw, 12, 12);
 	tbrecord->registerToggleCallback(setRecordMode);
 	tbrecord->setColorOff(RGB15(18, 0, 0) | BIT(15));
 
@@ -3190,7 +3206,7 @@ void setupGUI(bool dldi_enabled)
 	gui->registerWidget(buttonrenameinst, 0, SUB_SCREEN);
 	gui->registerWidget(buttonrenamesample, 0, SUB_SCREEN);
 	gui->registerWidget(tbmultisample, 0, SUB_SCREEN);
-	gui->registerWidget(cbloop, 0, SUB_SCREEN);
+	gui->registerWidget(cbscrolllock, 0, SUB_SCREEN);
 	gui->registerWidget(numberboxadd, 0, SUB_SCREEN);
 	gui->registerWidget(numberboxoctave, 0, SUB_SCREEN);
 	gui->registerWidget(labeladd, 0, SUB_SCREEN);
@@ -3216,14 +3232,14 @@ void setupGUI(bool dldi_enabled)
 
 void move_to_bottom(void)
 {
-	state->row = song->getPatternLength(song->getPotEntry(state->potpos))-1;
+	state->setCursorRow(song->getPatternLength(song->getPotEntry(state->potpos))-1);
 	pv->updateSelection();
 	redraw_main_requested = true;
 }
 
 void move_to_top(void)
 {
-	state->row = 0;
+	state->setCursorRow(0);
 	pv->updateSelection();
 	redraw_main_requested = true;
 }
@@ -3237,7 +3253,7 @@ void handleButtons(u16 buttons, u16 buttonsheld)
 	{
 		if(buttons & mykey_UP)
 		{
-			int newrow = state->row;
+			int newrow = state->getCursorRow();
 
 			if(fastscroll == false) {
 				newrow--;
@@ -3248,7 +3264,7 @@ void handleButtons(u16 buttons, u16 buttonsheld)
 			while(newrow < 0)
 				newrow += ptnlen;
 
-			state->row = newrow;
+			state->setCursorRow(newrow);
 
 			pv->updateSelection();
 			redraw_main_requested = true;
@@ -3256,7 +3272,7 @@ void handleButtons(u16 buttons, u16 buttonsheld)
 		}
 		else if(buttons & mykey_DOWN)
 		{
-			int newrow = state->row;
+			int newrow = state->getCursorRow();
 
 			if(fastscroll == false){
 				newrow++;
@@ -3266,7 +3282,7 @@ void handleButtons(u16 buttons, u16 buttonsheld)
 
 			newrow %= ptnlen;
 
-			state->row = newrow;
+			state->setCursorRow(newrow);
 
 			pv->updateSelection();
 			redraw_main_requested = true;
@@ -3619,7 +3635,7 @@ int main(int argc, char **argv) {
 
 	// Init interprocessor communication
 	CommandInit();
-	RegisterRowCallback(handleNewRow);
+	RegisterRowCallback(handleRowChangeFromSong);
 	RegisterStopCallback(handleStop);
 	RegisterPlaySampleFinishedCallback(handlePreviewSampleFinished);
 	RegisterPotPosChangeCallback(handlePotPosChangeFromSong);

@@ -26,7 +26,7 @@ class Action {
 class PatternLocatedAction: public Action {
     public:
         PatternLocatedAction(State *state, u8 channel, u16 row);
-        PatternLocatedAction(State *state): PatternLocatedAction(state, state->channel, state->row) {};
+        PatternLocatedAction(State *state): PatternLocatedAction(state, state->channel, state->getCursorRow()) {};
         virtual ~PatternLocatedAction() = 0;
 
     protected:
