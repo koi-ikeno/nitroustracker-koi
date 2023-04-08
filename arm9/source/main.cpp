@@ -73,6 +73,7 @@
 #include "icon_paste_raw.h"
 #include "icon_pause_raw.h"
 #include "icon_play_raw.h"
+#include "icon_record_raw.h"
 #include "icon_stop_raw.h"
 
 #include "icon_undo_raw.h"
@@ -3063,9 +3064,10 @@ void setupGUI(bool dldi_enabled)
 	cbloop->setCaption("loop ptn");
 	cbloop->registerToggleCallback(handleLoopToggle);
 
-	tbrecord = new ToggleButton(140, 138, 44, 14, &sub_vram);
-	tbrecord->setCaption("record!");
+	tbrecord = new ToggleButton(140, 138, 14, 14, &sub_vram);
+	tbrecord->setBitmap(icon_record_raw, 10, 10);
 	tbrecord->registerToggleCallback(setRecordMode);
+	tbrecord->setColorOff(RGB15(18, 0, 0) | BIT(15));
 
 	labeladd = new Label(182, 126, 22, 12, &sub_vram, false, true);
 	labeladd->setCaption("add");

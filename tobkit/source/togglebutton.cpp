@@ -23,6 +23,7 @@ limitations under the License.
 
 ToggleButton::ToggleButton(u8 _x, u8 _y, u8 _width, u8 _height, u16 **_vram, bool _visible)
 	:Widget(_x, _y, _width, _height, _vram, _visible),
+	color_off(0), color_on(0), color_bg(0),
 	penIsDown(false), on(false), has_bitmap(false)
 {
 	onToggle = 0;
@@ -110,21 +111,22 @@ void ToggleButton::draw(void)
 {
 	if(!isExposed()) return;
 
-	drawGradient(theme->col_dark_ctrl, theme->col_dark_ctrl, 0, 0, width, height);
+	u16 bg = (color_bg & BIT(15)) ? color_bg : theme->col_dark_ctrl;
+	drawFullBox(0, 0, width, height, bg);
 	drawBorder();
 
 	u16 col;
 	if(penIsDown) {
 		if(on) {
-			col = theme->col_dark_ctrl;
+			col = bg;
 		} else {
-			col = theme->col_light_ctrl;
+			col = (color_on & BIT(15)) ? color_on : theme->col_light_ctrl;
 		}
 	} else {
 		if(on) {
-			col = theme->col_light_ctrl;
+			col = (color_on & BIT(15)) ? color_on : theme->col_light_ctrl;
 		} else {
-			col = theme->col_text;
+			col = (color_off & BIT(15)) ? color_off : theme->col_text;
 		}
 	}
 	if(has_bitmap) {
@@ -132,28 +134,5 @@ void ToggleButton::draw(void)
 	}
 
 	drawString(caption, MAX(2, ((width-getStringWidth(caption))/2) ), height/2-5, 255, col);
-
-	/*
-	if(penIsDown) {
-		if(on) {
-			drawGradient(theme->col_dark_ctrl, theme->col_dark_ctrl, 0, 0, width, height);
-		} else {
-			drawGradient(theme->col_light_ctrl, theme->col_light_ctrl, 0, 0, width, height);
-		}
-	} else {
-		if(on) {
-			drawGradient(theme->col_dark_ctrl, theme->col_dark_ctrl, 0, 0, width, height);
-		} else {
-			drawGradient(theme->col_light_ctrl, theme->col_light_ctrl, 0, 0, width, height);
-		}
-	}
-	drawBorder();
-
-	if(has_bitmap) {
-		drawMonochromeIcon(2, 2, bmpwidth, bmpheight, bitmap);
-	}
-
-	drawString(caption, MAX(2, ((width-getStringWidth(caption))/2) ), height/2-5, 255, theme->col_light_ctrl);
-	*/
 }
 

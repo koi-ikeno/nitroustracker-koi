@@ -316,10 +316,14 @@ void Widget::drawPixel(u8 tx, u8 ty, u16 col) {
 
 ITCM_CODE
 void Widget::drawGradient(u16 col1, u16 col2, u8 tx, u8 ty, u8 tw, u8 th) {
+	if (col1 == col2) {
+		drawFullBox(tx, ty, tw, th, col1);
+		return;
+	}
 
 	u8 j;
 	u16 col;
-	
+
 	if (tw == 0) return;
 
 	int bw = tw * 2;

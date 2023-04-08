@@ -42,16 +42,21 @@ class ToggleButton: public Widget {
 		void setState(bool _on);
 		bool getState(void);
 
+		inline void setColorOff(u16 value) { color_off = value; }
+		inline void setColorOn(u16 value) { color_on = value; }
+		inline void setColorBg(u16 value) { color_bg = value; }
+
 	private:
 		void draw(void);
 
 		void (*onToggle)(bool);
 
+		char *caption;
+		const u8 *bitmap;
+		u16 color_off, color_on, color_bg;
 		bool penIsDown;
 		bool on;
-		char *caption;
 		bool has_bitmap;
-		const u8 *bitmap;
 		u8 bmpwidth, bmpheight;
 };
 
