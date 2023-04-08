@@ -682,6 +682,7 @@ void setSong(Song *newsong)
 	numberboxoctave->setValue(state->basenote/12);
 
 	tbrecord->setState(false);
+	cbscrolllock->setChecked(false);
 
 	inst = song->getInstrument(state->instrument);
 	if(inst != NULL) {
