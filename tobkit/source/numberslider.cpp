@@ -176,7 +176,7 @@ void NumberSlider::draw(void)
 	
 	// Number display
 	drawFullBox(9,1,width-10,height-2,theme->col_lighter_bg);
-	char numberstr[4];
+	char numberstr[5];
 	sniprintf(numberstr, sizeof(numberstr), hex ? "%2lx" : "%3ld", value);
 	drawString(numberstr, 10, 5);
 	

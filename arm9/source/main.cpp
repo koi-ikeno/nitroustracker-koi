@@ -2887,28 +2887,28 @@ void setupGUI(bool dldi_enabled)
 	// </Drawing and Generating>
 
 	// <Sample settings>
-		labelsamplevolume = new Label(21, 108, 25, 10, &sub_vram, false);
+		labelsamplevolume = new Label(22, 108, 25, 10, &sub_vram, false);
 		labelsamplevolume->setCaption("vol");
 
-		labelpanning = new Label(18, 127, 25, 10, &sub_vram, false);
+		labelpanning = new Label(19, 127, 25, 10, &sub_vram, false);
 		labelpanning->setCaption("pan");
 
-		labelrelnote = new Label(84, 108, 25, 10, &sub_vram, false);
+		labelrelnote = new Label(79, 108, 25, 10, &sub_vram, false);
 		labelrelnote->setCaption("rel");
 
-		labelfinetune = new Label(73, 127, 30, 10, &sub_vram, false);
-		labelfinetune->setCaption("tune");
+		labelfinetune = new Label(75, 127, 30, 10, &sub_vram, false);
+		labelfinetune->setCaption("tun");
 
-		nssamplevolume = new NumberSlider(39, 103, 32, 17, &sub_vram, 64, 0, 64);
+		nssamplevolume = new NumberSlider(40, 103, 32, 17, &sub_vram, 64, 0, 64);
 		nssamplevolume->registerChangeCallback(handleSampleVolumeChange);
 
-		nspanning = new NumberSlider(39, 122, 32, 17, &sub_vram, 64, 0, 127, false);
+		nspanning = new NumberSlider(40, 122, 32, 17, &sub_vram, 64, 0, 127, false);
 		nspanning->registerChangeCallback(handleSamplePanningChange);
 
-		nsrelnote = new NumberSliderRelNote(99, 103, 34, 17, &sub_vram, 0);
+		nsrelnote = new NumberSliderRelNote(94, 103, 38, 17, &sub_vram, 0);
 		nsrelnote->registerChangeCallback(handleSampleRelNoteChange);
 
-		nsfinetune = new NumberSlider(99, 122, 34, 17, &sub_vram, 0, -128, 127);
+		nsfinetune = new NumberSlider(94, 122, 38, 17, &sub_vram, 0, -128, 127);
 		nsfinetune->registerChangeCallback(handleSampleFineTuneChange);
 
 		sampletabbox->registerWidget(nssamplevolume, 0, 2);
