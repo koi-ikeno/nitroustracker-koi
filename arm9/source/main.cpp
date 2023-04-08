@@ -597,18 +597,16 @@ void handleInstChange(u16 newinst)
 
 void updateLabelSongLen(void)
 {
-	/* char *labelstr = (char*)malloc(12);
+	/* char labelstr[12];
 	sniprintf(labelstr, 12, "songlen:%2d", song->getPotLength());
-	labelsonglen->setCaption(labelstr);
-	free(labelstr); */
+	labelsonglen->setCaption(labelstr); */
 }
 
 void updateLabelChannels(void)
 {
-	char *labelstr = (char*)malloc(9);
+	char labelstr[9];
 	sniprintf(labelstr, 9, "chn: %2d", song->getChannels());
 	labelchannels->setCaption(labelstr);
-	free(labelstr);
 }
 
 void updateTempoAndBpm(void)

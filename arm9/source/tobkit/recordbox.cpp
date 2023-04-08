@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../tools.h"
 #include "ntxm/instrument.h"
 #include "ntxm/fifocommand.h"
 
@@ -183,9 +184,11 @@ void RecordBox::startRecording(void)
 		// Kill and recreate the sample
 		if(sample != NULL)
 			instrument->setSample(smpidx, NULL); // Deletes the sample
-		
+
+		if(sound_data) free(sound_data);
 		sound_data = (u16*)malloc(RECORDBOX_SOUNDDATA_SIZE);
-		
+		if(!sound_data) return;
+
 		// Start recording
 		CommandStartRecording(sound_data, RECORDBOX_SOUNDDATA_SIZE/2);
 		recording = true;
@@ -202,9 +205,10 @@ void RecordBox::stopRecording()
 	if(size < RECORDBOX_CROP_SAMPLES_END + RECORDBOX_CROP_SAMPLES_START)
 	{
 		free(sound_data);
+		sound_data = NULL;
 		sample = NULL;
 		onOk();
-		printf("omfg\n");
+		debugprintf("recorded data too small\n");
 		return;
 	}
 	
@@ -221,7 +225,10 @@ void RecordBox::stopRecording()
 		sound_data = (u16*)realloc(sound_data, newsize);
 	}
 	
+	// takes ownership of sound_data
 	sample = new Sample(sound_data, newsize/2, RECORDBOX_SAMPLING_FREQ);
+	sound_data = NULL;
+
 	sample->setName("rec");
 	
 	//smp->cutSilence(); // Cut silence in the beginning (experiMENTAL!)

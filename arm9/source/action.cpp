@@ -288,17 +288,13 @@ bool ActionBuffer::add(Song *song, Action *action)
         a_tail = ACTION_BUFFER_INC(a_tail);
         a_pos = a_tail;
         on_change();
-    #ifdef DEBUG
-        iprintf("undo push => %d\n", queue_length());
-    #endif
+        debugprintf("undo push => %d\n", queue_length());
 		DC_FlushAll();
         return true;
     }
     else
     {
-#ifdef DEBUG
-        iprintf("undo buffer trashed!\n");
-#endif
+        debugprintf("undo buffer trashed!\n");
         clear();
         return false;
     }
@@ -323,9 +319,7 @@ bool ActionBuffer::undo(Song *song)
     else
     {
         // undo failed, clear all
-#ifdef DEBUG
-        iprintf("undo buffer trashed!\n");
-#endif
+        debugprintf("undo buffer trashed!\n");
         clear();
         return false;
     }
@@ -349,9 +343,7 @@ bool ActionBuffer::redo(Song *song)
     else
     {
         // undo failed, clear all
-#ifdef DEBUG
-        iprintf("redo buffer trashed!\n");
-#endif
+        debugprintf("redo buffer trashed!\n");
         clear();
         return false;
     }
