@@ -359,8 +359,9 @@ static bool uiPotSelection(u16 *sel_x1, u16 *sel_y1, u16 *sel_x2, u16 *sel_y2, b
 	}
 	else
 	{
-		if (clear)
+		if (clear) {
 			pv->clearSelection();
+		}
 	}
 
 	return is_box;
@@ -2201,9 +2202,14 @@ void handleButtonColumnSelect(void)
 	u16 x1, y1, x2, y2;
 	if(pv->getSelection(&x1, &y1, &x2, &y2) == true) {
 		// Yes: Expand the selection to use the complete rows
-		y1 = 0;
-		y2 = song->getPatternLength(song->getPotEntry(state->potpos)) - 1;
-		pv->setSelection(x1, y1, x2, y2);
+		u16 new_y1 = 0;
+		u16 new_y2 = song->getPatternLength(song->getPotEntry(state->potpos)) - 1;
+		if (new_y1 != y1 || new_y2 != y2) {
+			pv->setSelection(x1, new_y1, x2, new_y2);
+		} else {
+			// Already expanded: Clear selection
+			pv->clearSelection();
+		}
 	} else {
 		// No: Select row at cursor
 		x1 = x2 = state->channel;
