@@ -2719,7 +2719,7 @@ void setupGUI(bool dldi_enabled)
 		lbpot = new ListBox(4, 21, 50, 78, &sub_vram, 1, true);
 		lbpot->set(0," 0");
 		lbpot->registerChangeCallback(handlePotPosChangeFromUser);
-		buttonpotup = new Button(71, 47, 14, 12, &sub_vram);
+		buttonpotup = new Button(70, 47, 14, 12, &sub_vram);
 		buttonpotup->setCaption(">");
 		buttonpotup->registerPushCallback(handlePotInc);
 		buttonpotdown = new Button(55, 47, 14, 12, &sub_vram);
@@ -2734,10 +2734,10 @@ void setupGUI(bool dldi_enabled)
 		buttoncloneptn = new Button(55, 34, 29, 12, &sub_vram);
 		buttoncloneptn->setCaption("cln");
 		buttoncloneptn->registerPushCallback(handlePtnClone);
-		tbqueuelock = new ToggleButton(55, 73, 29, 12, &sub_vram, true);
+		tbqueuelock = new ToggleButton(55, 74, 29, 12, &sub_vram, true);
 		tbqueuelock->setCaption("lock");
 		tbqueuelock->registerToggleCallback(toggleQueueLock);
-		tbpotloop = new ToggleButton(55, 86, 29, 12, &sub_vram, true);
+		tbpotloop = new ToggleButton(55, 87, 29, 12, &sub_vram, true);
 		tbpotloop->setCaption("loop");
 		tbpotloop->registerToggleCallback(handleLoopToggle);
 
@@ -2748,7 +2748,7 @@ void setupGUI(bool dldi_enabled)
 
 		labelchannels = new Label(87, 22, 48, 12, &sub_vram, false);
 		labelchannels->setCaption("chn:  4");
-		buttonlesschannels = new Button(111, 34, 12, 12, &sub_vram);
+		buttonlesschannels = new Button(112, 34, 12, 12, &sub_vram);
 		buttonlesschannels->setCaption("-");
 		buttonlesschannels->registerPushCallback(handleChannelDel);
 		buttonmorechannels = new Button(125, 34, 12, 12, &sub_vram);
