@@ -1,4 +1,4 @@
--- NitrousTracker v0.4.5 (??)
+-- NitrousTracker v0.4.5 (2023-04-08)
 
 New features:
 

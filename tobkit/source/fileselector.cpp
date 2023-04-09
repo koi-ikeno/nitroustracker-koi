@@ -279,7 +279,7 @@ void FileSelector::read_directory(void)
 	}
 
 	// Add ".."
-	if(current_directory != "/") {
+	if(current_directory != "/" && !current_directory.ends_with(":/")) {
 		File dotdot;
 		dotdot.name = "..";
 		dotdot.is_dir = true;
