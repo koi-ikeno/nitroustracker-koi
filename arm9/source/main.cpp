@@ -1256,7 +1256,7 @@ void updateGuiToNewPattern(u8 newpattern)
 // Callback called from song when the pot element changes during playback
 void handlePotPosChangeFromSong(u16 newpotpos)
 {
-	if (state->queued_potpos >= 0) {
+	if (state->queued_potpos >= 0 && !tbpotloop->getState()) {
 		state->potpos = state->queued_potpos;
 		state->setPlaybackRow(0);
 
