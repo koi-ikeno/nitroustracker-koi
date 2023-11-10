@@ -1,3 +1,19 @@
+-- NitrousTracker v0.4.6 (2023-11-10)
+
+New features:
+
+- holding "clr" while playing music will now continue clearing notes
+
+Improvements:
+
+- faster file I/O operations
+- updated BlocksDS toolchain
+
+Fixes:
+
+- fixed ".." appearing in root directory
+- fixed pattern lock and loop being enabled at the same time
+
 -- NitrousTracker v0.4.5 (2023-04-08)
 
 New features:
