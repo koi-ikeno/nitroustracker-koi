@@ -43,6 +43,7 @@ class Button: public Widget {
 		void penMove(u8 x, u8 y);
 		void buttonPress(u16 button);
 		
+		inline bool isPenDown(void) const { return penIsDown; }
 		void setCaption(const char *caption);
 		
 	private:

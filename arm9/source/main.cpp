@@ -367,10 +367,22 @@ static bool uiPotSelection(u16 *sel_x1, u16 *sel_y1, u16 *sel_x2, u16 *sel_y2, b
 	return is_box;
 }
 
-void handleNoteFill(u8 note)
+void handleNoteFill(u8 note, bool while_playing)
 {
 	u16 sel_x1, sel_y1, sel_x2, sel_y2;
-	bool is_box = uiPotSelection(&sel_x1, &sel_y1, &sel_x2, &sel_y2, true);
+	bool is_box;
+	if (while_playing)
+	{
+		sel_x1 = 0;
+		sel_x2 = song->getChannels()-1;
+		sel_y1 = sel_y2 = state->getCursorRow();
+		is_box = true;
+	}
+	else
+	{
+		is_box = uiPotSelection(&sel_x1, &sel_y1, &sel_x2, &sel_y2, true);
+	}
+
 	if (!is_box)
 	{
 		// smaller cell set
@@ -378,7 +390,7 @@ void handleNoteFill(u8 note)
 			song->getPattern(song->getPotEntry(state->potpos))[state->channel][state->getCursorRow()], note
 		);
 
-        action_buffer->add(song, new SingleCellSetAction(state, state->channel, state->getCursorRow(), targetCell));
+		action_buffer->add(song, new SingleCellSetAction(state, state->channel, state->getCursorRow(), targetCell));
 		handleNoteAdvanceRow();
 		return;
 	}
@@ -1029,13 +1041,13 @@ void handleTypewriterFilenameOk(void)
 
 
 void emptyNoteStroke(void) {
-	handleNoteFill(EMPTY_NOTE);
+	handleNoteFill(EMPTY_NOTE, false);
 	redraw_main_requested = true;
 }
 
 
 void stopNoteStroke(void) {
-	handleNoteFill(STOP_NOTE);
+	handleNoteFill(STOP_NOTE, false);
 	redraw_main_requested = true;
 }
 
@@ -1592,6 +1604,9 @@ void handleRowChangeFromSong(u16 row)
 	if(!state->playing)
 		return;
 
+	if(buttonemptynote->isPenDown())
+		handleNoteFill(EMPTY_NOTE, true);
+	
 	redraw_main_requested = true;
 
 #ifdef WIFI
