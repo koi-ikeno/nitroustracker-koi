@@ -44,6 +44,9 @@ endif
 
 CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions
 
+CFLAGS		:=	$(CFLAGS) -std=gnu11
+CXXFLAGS	:=	$(CXXFLAGS) -std=gnu++20
+
 ASFLAGS	:=	-g $(ARCH) -march=armv5te -mtune=arm946e-s
 LDFLAGS	=	-specs=ds_arm9.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 

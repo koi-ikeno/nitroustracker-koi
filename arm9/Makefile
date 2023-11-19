@@ -31,7 +31,7 @@ BITMAPS		:=	bitmaps
 ARCH	:=	-mthumb -mthumb-interwork
 #ARCH	:=	-mthumb-interwork
 
-CFLAGS	:=	-g -Wall -O2\
+CFLAGS	:=	-g -Wall -O2 \
  			-march=armv5te -mtune=arm946e-s -fomit-frame-pointer\
 			-ffast-math \
 			$(ARCH)
@@ -47,6 +47,9 @@ endif
 
 #CXXFLAGS	:=	$(CFLAGS) -fno-rtti -fno-exceptions
 CXXFLAGS	:=	$(CFLAGS) -fno-rtti
+
+CFLAGS		:=	$(CFLAGS) -std=gnu11
+CXXFLAGS	:=	$(CXXFLAGS) -std=gnu++20
 
 ASFLAGS	:=	-g $(ARCH) -march=armv5te -mtune=arm946e-s
 
