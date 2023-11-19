@@ -123,7 +123,7 @@ void NumberBox::draw(void)
 	// Number display
 	drawFullBox(9, 1, width-9, height-1, theme->col_lighter_bg);
 	
-	char numberstr[4];
+	char numberstr[12];
 	char formatstr[] = "%_u";
 	// Set no of digits (hacky, but there's no other way)
 	formatstr[1] = digits+48;

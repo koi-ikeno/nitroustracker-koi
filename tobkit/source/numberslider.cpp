@@ -27,6 +27,7 @@ NumberSlider::NumberSlider(u8 _x, u8 _y, u8 _width, u8 _height, uint16 **_vram, 
 	value(_value), btnstate(0), min(_min), max(_max), hex(_hex)
 {
 	onChange = 0;
+	onPostChange = 0;
 }
 
 // Drawing request
