@@ -106,7 +106,9 @@ class Widget {
 		void drawHLine(u8 tx, u8 ty, u8 length, u16 col);
 		void drawVLine(u8 tx, u8 ty, u8 length, u16 col);
 		void drawBresLine(u8 tx1, u8 ty1, u8 tx2, u8 ty2, u16 col);
-		void drawPixel(u8 tx, u8 ty, u16 col);
+		inline void drawPixel(u8 tx, u8 ty, u16 col) {
+			*(*vram+SCREEN_WIDTH*(y+ty)+x+tx) = col;
+		}
 		void drawGradient(u16 col1, u16 col2, u8 tx, u8 ty, u8 tw, u8 th);
 
 		inline const u16 interpolateColor(u16 col1, u16 col2, int alpha /* 0..4095 */) {

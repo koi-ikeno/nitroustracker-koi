@@ -312,7 +312,7 @@ void ListBox::draw(void)
 	s8 j, p;
 	for(j=0;j<3;j++) {
 		for(p=-j;p<=j;++p) {
-			*(*vram+SCREEN_WIDTH*(y+j+3)+x+width-SCROLLBAR_WIDTH+4+p) = RGB15(0,0,0) | BIT(15);
+			drawPixel(width-SCROLLBAR_WIDTH+4+p, j+3, RGB15(0,0,0) | BIT(15));
 		}
 	}
 	
@@ -328,7 +328,7 @@ void ListBox::draw(void)
 	// This draws the down-arrow
 	for(j=2;j>=0;j--) {
 		for(p=-j;p<=j;++p) {
-			*(*vram+SCREEN_WIDTH*(y-j+height-4)+x+width-SCROLLBAR_WIDTH+4+p) = RGB15(0,0,0) | BIT(15);
+			drawPixel(width-SCROLLBAR_WIDTH+4+p, -j+height-4, RGB15(0,0,0) | BIT(15));
 		}
 	}
 	

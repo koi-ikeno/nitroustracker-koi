@@ -157,7 +157,7 @@ void Widget::drawString(const char* str, u8 tx, u8 ty, u8 maxwidth, u16 color, u
 				// each char is 8 pixels wide, and 8 pixels
 				// are in a byte.
 				if(col & 1) {
-					*(*vram+SCREEN_WIDTH*(j+y+ty)+(i+x+tx+drawpos)) = color;
+					drawPixel(i+tx+drawpos, j+ty, color);
 				}
 			}
 		}
@@ -170,14 +170,14 @@ void Widget::drawString(const char* str, u8 tx, u8 ty, u8 maxwidth, u16 color, u
 ITCM_CODE
 void Widget::drawBox(u8 tx, u8 ty, u8 tw, u8 th, u16 col)
 {
-	u8 i,j;
+	uint_fast8_t i,j;
 	for(i=0;i<tw;++i) {
-		*(*vram+SCREEN_WIDTH*(y+ty)+i+(x+tx)) = col;
-		*(*vram+SCREEN_WIDTH*((y+ty)+th-1)+i+(x+tx)) = col;
+		drawPixel(i+tx, ty, col);
+		drawPixel(i+tx, ty+th-1, col);
 	}
-	for(j=0;j<th;++j) {
-		*(*vram+SCREEN_WIDTH*((y+ty)+j)+(x+tx)) = col;
-		*(*vram+SCREEN_WIDTH*((y+ty)+j)+(x+tx)+tw-1) = col;
+	for(j=1;j<th-1;++j) {
+		drawPixel(tx, ty+j, col);
+		drawPixel(tx+tw-1, ty+j, col);
 	}
 }
 
@@ -199,14 +199,14 @@ void Widget::drawBorder(u16 col) {
 ITCM_CODE
 void Widget::drawHLine(u8 tx, u8 ty, u8 length, u16 col) {
 	for(int i=0;i<length;++i) {
-		*(*vram+SCREEN_WIDTH*(y+ty)+i+(x+tx)) = col;
+		drawPixel(i+tx, ty, col);
 	}
 }
 
 ITCM_CODE
 void Widget::drawVLine(u8 tx, u8 ty, u8 length, u16 col) {
 	for(int i=0;i<length;++i) {
-		*(*vram+SCREEN_WIDTH*(y+ty+i)+(x+tx)) = col;
+		drawPixel(tx, i+ty, col);
 	}
 }
 
@@ -257,9 +257,8 @@ void Widget::drawBresLine(u8 tx1, u8 ty1, u8 tx2, u8 ty2, u16 col)
 				d -= 2 * dx;
 			}
 
-			//PxlOn(xp,yp,r1,g1,b1,r2,g2,b2);
 			*(*vram+SCREEN_WIDTH*yp+xp) = col;
-
+	
 			d += 2 * dy;
 		}
 	}
@@ -302,16 +301,11 @@ void Widget::drawBresLine(u8 tx1, u8 ty1, u8 tx2, u8 ty2, u16 col)
 				d -= 2 * dx;
 			}
 
-			//PxlOn(yp,xp,r1,g1,b1,r2,g2,b2);
 			*(*vram+SCREEN_WIDTH*xp+yp) = col;
-
+	
 			d += 2 * dy;
 		}
 	}
-}
-
-void Widget::drawPixel(u8 tx, u8 ty, u16 col) {
-	*(*vram+SCREEN_WIDTH*(y+ty)+x+tx) = col;
 }
 
 ITCM_CODE
@@ -357,7 +351,7 @@ void Widget::drawMonochromeIcon(u8 tx, u8 ty, u8 tw, u8 th, const u8 *icon, u16 
 	for(u8 j=0;j<th;++j) {
 		for(u8 i=0;i<tw;++i,++pixelidx) {
 			if(icon[pixelidx/8] & BIT(pixelidx%8) ) {
-				*(*vram+SCREEN_WIDTH*(y+ty+j)+x+tx+i) = color;
+				drawPixel(tx+i, ty+j, color);
 			}
 		}
 	}
@@ -369,7 +363,7 @@ void Widget::drawMonochromeIconOffset(u8 tx, u8 ty, u8 tw, u8 th, u8 ix, u8 iy, 
 		u16 pixelidx = ((iy+j) * iw) + ix;
 		for(u8 i=0;i<tw;++i,++pixelidx) {
 			if(icon[pixelidx/8] & BIT(pixelidx%8) ) {
-				*(*vram+SCREEN_WIDTH*(y+ty+j)+x+tx+i) = color;
+				drawPixel(tx+i, ty+j, color);
 			}
 		}
 	}

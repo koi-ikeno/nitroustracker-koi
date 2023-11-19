@@ -155,10 +155,10 @@ void NumberSlider::draw(void)
 	}
 	
 	// This draws the up-arrow
-	s8 i,j;
+	int_fast8_t i,j;
 	for(j=0;j<3;j++) {
 		for(i=-j;i<=j;++i) {
-			*(*vram+SCREEN_WIDTH*(y+j+3)+x+4+i) = theme->col_icon;
+			drawPixel(4+i, j+3, theme->col_icon);
 		}
 	}
 	
@@ -168,7 +168,7 @@ void NumberSlider::draw(void)
 	// This draws the down-arrow
 	for(j=2;j>=0;j--) {
 		for(i=-j;i<=j;++i) {
-			*(*vram+SCREEN_WIDTH*(y-j+13)+x+4+i) = theme->col_icon;
+			drawPixel(4+i, -j+13, theme->col_icon);
 		}
 	}
 	
