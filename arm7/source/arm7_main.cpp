@@ -34,8 +34,6 @@ extern "C" {
 #include <dswifi7.h>
 #endif
 
-#define abs(x)	((x)>=0?(x):-(x))
-
 NTXM7 *ntxm7 = 0;
 
 static volatile bool exitflag = false;
@@ -44,9 +42,7 @@ extern bool ntxm_recording;
 int vcount;
 touchPosition first,tempPos;
 
-//---------------------------------------------------------------------------------
 void VcountHandler() {
-//---------------------------------------------------------------------------------
 	if(ntxm_recording == true)
 		return;
 
@@ -67,15 +63,6 @@ void ntxmTimerHandler(void) {
 	ntxm7->timerHandler();
 }
 
-//---------------------------------------------------------------------------------
-void enableSound() {
-//---------------------------------------------------------------------------------
-    powerOn(POWER_SOUND);
-    writePowerManagement(PM_CONTROL_REG, ( readPowerManagement(PM_CONTROL_REG) & ~PM_SOUND_MUTE ) | PM_SOUND_AMP );
-    REG_SOUNDCNT = SOUND_ENABLE;
-    REG_MASTER_VOLUME = 127;
-}
-
 void powerButtonHandler(void) {
 	exitflag = true;
 }
@@ -83,28 +70,29 @@ void powerButtonHandler(void) {
 //---------------------------------------------------------------------------------
 int main(int argc, char ** argv) {
 //---------------------------------------------------------------------------------
-    readUserSettings(); // read User Settings from firmware
-    rtcReset(); // Reset the clock if needed
-    irqInit();
-    fifoInit();
+	enableSound();
+	readUserSettings();
+	ledBlink(0);
 	touchInit();
-#ifdef WIFI
-    installWifiFIFO();
-#endif
-    installSystemFIFO();
-
-	irqEnable(IRQ_VBLANK);
-	irqSet(IRQ_VBLANK, VblankHandler);
-
+	irqInit();
 	SetYtrigger(80);
 	irqSet(IRQ_VCOUNT, VcountHandler);
-	irqEnable(IRQ_VCOUNT);
+	irqSet(IRQ_VBLANK, VblankHandler);
+	fifoInit();
+#ifdef WIFI
+	installWifiFIFO();
+#endif
+	installSystemFIFO();
 
+	irqEnable(IRQ_VBLANK | IRQ_VCOUNT);
 #ifdef WIFI
 	irqEnable(IRQ_NETWORK);
 #endif
-
-	enableSound();
+#ifdef BLOCKSDS
+	initClockIRQTimer(3);
+#else
+	rtcReset();
+#endif
 
 	// Create ntxm player
 	ntxm7 = new NTXM7(ntxmTimerHandler);
