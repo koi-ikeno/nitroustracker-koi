@@ -1,3 +1,13 @@
+-- NitrousTracker v0.4.7 (2023-11-26)
+
+Improvements:
+
+- updated BlocksDS toolchain
+
+Fixes:
+
+- fixed microphone recording length
+
 -- NitrousTracker v0.4.6 (2023-11-10)
 
 New features:
