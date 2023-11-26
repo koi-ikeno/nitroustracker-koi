@@ -190,7 +190,8 @@ void RecordBox::startRecording(void)
 		if(!sound_data) return;
 
 		// Start recording
-		CommandStartRecording(sound_data, RECORDBOX_SOUNDDATA_SIZE/2);
+		DC_FlushAll();
+		CommandStartRecording(sound_data, RECORDBOX_SOUNDDATA_SIZE);
 		recording = true;
 		
 		draw();
@@ -200,6 +201,9 @@ void RecordBox::startRecording(void)
 void RecordBox::stopRecording()
 {
 	int size = CommandStopRecording();
+	DC_InvalidateRange(sound_data, size);
+
+	debugprintf("orig sample size %lu @ %d Hz\n", size/2, RECORDBOX_SAMPLING_FREQ);
 		
 	// Security check
 	if(size < RECORDBOX_CROP_SAMPLES_END + RECORDBOX_CROP_SAMPLES_START)
@@ -227,6 +231,7 @@ void RecordBox::stopRecording()
 	
 	// takes ownership of sound_data
 	sample = new Sample(sound_data, newsize/2, RECORDBOX_SAMPLING_FREQ);
+	debugprintf("cut sample size %lu @ %d Hz\n", newsize/2, RECORDBOX_SAMPLING_FREQ);
 	sound_data = NULL;
 
 	sample->setName("rec");
