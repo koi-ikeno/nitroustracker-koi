@@ -23,7 +23,6 @@
  */
 
 #define GURU // Show guru meditations
-//#define SPLASH
 #define USE_FAT
 
 #include <nds.h>
@@ -41,7 +40,6 @@
 #include <tobkit/tobkit.h>
 
 // Special tracker widgets
-#include "tobkit/nitrotracker_logo.h"
 #include "tobkit/recordbox.h"
 #include "tobkit/numbersliderrelnote.h"
 #include "tobkit/envelope_editor.h"
@@ -59,7 +57,6 @@
 #include "state.h"
 #include "settings.h"
 #include "tools.h"
-#include "splash.h"
 
 #include "icon_disk_raw.h"
 #include "icon_song_raw.h"
@@ -80,6 +77,8 @@
 #include "icon_redo_raw.h"
 
 #include "icon_new_folder_raw.h"
+
+#include "nitrotracker_logo_raw.h"
 
 #include "sampleedit_control_icon_raw.h"
 #include "sampleedit_chip_icon_raw.h"
@@ -104,10 +103,6 @@
 #include <libdsmi.h>
 #include <dswifi9.h>
 #endif
-
-#define EXTERNAL_DATA(name) \
-  extern const uint8  name[]; \
-  extern const uint32 name##_size
 
 #define REPEAT_FREQ	10 /* Hz */
 #define REPEAT_START_DELAY 15 /* frames */
@@ -151,7 +146,7 @@ GUI *gui;
 	Piano *kb;
 	ListBox *lbinstruments, *lbsamples;
 	TabBox *tabbox;
-	Pixmap *pixmaplogo;
+	GradientIcon *pixmaplogo;
 // </Misc GUI>
 
 // <Disk op gui>
@@ -2635,7 +2630,8 @@ void setupGUI(bool dldi_enabled)
 	kb->registerNoteCallback(handleNoteStroke);
 	kb->registerReleaseCallback(handleNoteRelease);
 
-	pixmaplogo = new Pixmap(101, 1, 76, 17, nitrotracker_logo, &sub_vram);
+	pixmaplogo = new GradientIcon(98, 1, 80, 17, settings->getTheme()->col_light_ctrl, settings->getTheme()->col_dark_ctrl,
+		(const u32*) nitrotracker_logo_raw, &sub_vram);
 	pixmaplogo->registerPushCallback(showAboutBox);
 
 	tabbox = new TabBox(1, 1, 139, 151, &sub_vram, TABBOX_ORIENTATION_TOP, 16);
@@ -3564,10 +3560,6 @@ int main(int argc, char **argv) {
 
 	// Adjust screens so that the main screen is the top screen
 	lcdMainOnTop();
-
-#ifdef SPLASH
-	splash_show();
-#endif
 
 	// Main screen: Text and double buffer ERB
 	videoSetMode(MODE_5_2D | DISPLAY_BG0_ACTIVE | DISPLAY_BG2_ACTIVE);

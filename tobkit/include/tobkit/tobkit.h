@@ -21,6 +21,7 @@ limitations under the License.
 #include <tobkit/button.h>
 #include <tobkit/checkbox.h>
 #include <tobkit/fileselector.h>
+#include <tobkit/gradienticon.h>
 #include <tobkit/groupbox.h>
 #include <tobkit/gui.h>
 #include <tobkit/piano_hit.h>

@@ -26,21 +26,34 @@ import struct, sys
 bits = {}
 
 im = Image.open(sys.argv[1]).convert("RGBA")
-bit_count = im.width * im.height
-byte_count = int((bit_count + 7) / 8)
 
-print("Converting %dx%d image to %d bits (%d bytes)" % (im.width, im.height, bit_count, byte_count))
+has_transparency = False
 
 for iy in range(0, im.height):
 	for ix in range(0, im.width):
 		pxl = im.getpixel((ix, iy))
-		bits[im.width*iy + ix] = (pxl[0] < 128)
+		if (pxl[0] > 128) and (pxl[1] < 128):
+			bits[im.width*iy + ix] = -1
+			has_transparency = True
+		else:
+			bits[im.width*iy + ix] = 1 if (pxl[0] < 128) else 0
+
+bit_count = im.width * im.height * (2 if has_transparency else 1)
+byte_count = int((bit_count + 7) / 8)
+
+print("Converting %dx%d image to %d bits (%d bytes)" % (im.width, im.height, bit_count, byte_count))
 
 with open(sys.argv[2], "wb") as fp:
 	for i in range(0, byte_count):
 		v = 0
-		for ib in range(0, 8):
-			idx = i * 8 + ib
-			if idx in bits and bits[idx] == True:
-				v = v | (1 << ib)
+		if has_transparency:
+			for ib in range(0, 4):
+				idx = i * 4 + ib
+				if idx in bits:
+					v = v | ((bits[idx] + 1) << (ib * 2))
+		else:
+			for ib in range(0, 8):
+				idx = i * 8 + ib
+				if idx in bits:
+					v = v | (bits[idx] << ib)
 		fp.write(struct.pack("<B", v))
