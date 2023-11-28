@@ -3270,7 +3270,7 @@ void setupGUI(bool dldi_enabled)
 		buttonsetnotevol->registerPushCallback(handleSetNoteVol);
 
 		cbtoggleeffects = new CheckBox(195, 32, 30, 12, &main_vram_back, true, true, true);
-		cbtoggleeffects->setCaption("FX");
+		cbtoggleeffects->setCaption("fx");
 		cbtoggleeffects->registerToggleCallback(handleToggleEffectsVisibility);
 
 		labeleffectcmd = new Label(200, 44, 23, 10, &main_vram_back, false, true);
