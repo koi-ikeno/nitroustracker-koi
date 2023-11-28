@@ -53,10 +53,14 @@ MessageBox::MessageBox(u16 **_vram, const char *message, u8 n_buttons, ...)
 	}
 	va_end(marker);
 
-	u8 fixedbuttonwidth = 0;
-	if(width < MB_MIN_WIDTH)
+	int minwidth = getStringWidth(message) + 8;
+	if (minwidth < MB_MIN_WIDTH)
+		minwidth = MB_MIN_WIDTH;
+
+	int fixedbuttonwidth = 0;
+	if(width < minwidth)
 	{
-		width = MB_MIN_WIDTH;
+		width = minwidth;
 		if(n_buttons>0) {
 			fixedbuttonwidth = (width - 10) / n_buttons - 10;
 		}
@@ -66,12 +70,6 @@ MessageBox::MessageBox(u16 **_vram, const char *message, u8 n_buttons, ...)
 
 	// Set x
 	x = (SCREEN_WIDTH-width)/2;
-
-	// Position label and buttons
-	//u8 labelx = x+(width-getStringWidth(message))/2;
-	//label = new Label(labelx, y+2, width-20, 12, _vram, false);
-	//label->setCaption(message);
-	//gui.registerWidget(label, 0);
 
 	if(n_buttons > 0)
 	{
