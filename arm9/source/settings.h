@@ -49,6 +49,9 @@ class Settings {
 		bool getStereoOutput(void);
 		void setStereoOutput(bool stereo_output_);
 
+		bool getFreq47kHz(void);
+		void setFreq47kHz(bool freq_47khz_);
+
 		Theme *getTheme(void);
 		void setTheme(Theme *theme_);
 
@@ -74,6 +77,7 @@ class Settings {
 		Handedness handedness;
 		bool sample_preview;
 		bool stereo_output;
+		bool freq_47khz;
 		Theme *theme;
 		char configpath[SETTINGS_FILENAME_LEN + 1];
 		char songpath[SETTINGS_FILENAME_LEN + 1];

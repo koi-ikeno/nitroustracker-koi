@@ -210,6 +210,9 @@ GUI *gui;
 	RadioButton::RadioButtonGroup *rbgoutput;
 	RadioButton *rboutputmono, *rboutputstereo;
 	GroupBox *gboutput;
+	RadioButton::RadioButtonGroup *rbgfreq;
+	RadioButton *rbfreq32, *rbfreq47;
+	GroupBox *gbfreq;
 	Button *btnconfigsave;
 // </Settings Gui>
 
@@ -2177,6 +2180,12 @@ void handleOutputModeChange(u8 outputMode)
 	stopPlay();
 }
 
+void handleOutputFreqChange(u8 freq)
+{
+	settings->setFreq47kHz(freq != 0);
+	stopPlay();
+	soundExtSetFrequency(freq ? 47 : 32);
+}
 
 void switchScreens(void)
 {
@@ -3157,6 +3166,19 @@ void setupGUI(bool dldi_enabled)
 		rbgoutput->setActive(1);
 		rbgoutput->registerChangeCallback(handleOutputModeChange);
 
+		if (isDSiMode()) {
+			gbfreq = new GroupBox(89, 62, 40, 34, &sub_vram);
+			gbfreq->setText("freq");
+
+			rbgfreq = new RadioButton::RadioButtonGroup();
+			rbfreq32 = new RadioButton(91, 72, 36, 14, &sub_vram, rbgfreq);
+			rbfreq32->setCaption("32k");
+			rbfreq47 = new RadioButton(91, 86, 36, 14, &sub_vram, rbgfreq);
+			rbfreq47->setCaption("47k");
+			rbgfreq->setActive(1);
+			rbgfreq->registerChangeCallback(handleOutputFreqChange);
+		}
+
 		btnconfigsave = new Button(97, 135, 40, 14, &sub_vram);
 		btnconfigsave->setCaption("save");
 		btnconfigsave->registerPushCallback(saveConfig);
@@ -3179,6 +3201,11 @@ void setupGUI(bool dldi_enabled)
 		tabbox->registerWidget(rboutputmono, 0, 4);
 		tabbox->registerWidget(rboutputstereo, 0, 4);
 		tabbox->registerWidget(gboutput, 0, 4);
+		if (isDSiMode()) {
+			tabbox->registerWidget(rbfreq32, 0, 4);
+			tabbox->registerWidget(rbfreq47, 0, 4);
+			tabbox->registerWidget(gbfreq, 0, 4);
+		}
 	// </Settings Gui>
 
 	lbinstruments = new ListBox(141, 33, 114, 89, &sub_vram, MAX_INSTRUMENTS, true, true, false);

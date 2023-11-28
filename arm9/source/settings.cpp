@@ -93,6 +93,9 @@ fat(use_fat), changed(false)
 			getConfigValue(confstr, "Stereo Output", prevstring, 20, "True");
 			stereo_output = stringToBool(prevstring);
 
+			getConfigValue(confstr, "47kHz Output", prevstring, 20, "False");
+			freq_47khz = stringToBool(prevstring);
+
 			free(confstr);
 		}
 	}
@@ -128,6 +131,17 @@ bool Settings::getStereoOutput(void)
 void Settings::setStereoOutput(bool stereo_output_)
 {
 	stereo_output =  stereo_output_;
+	changed = true;
+}
+
+bool Settings::getFreq47kHz(void)
+{
+	return freq_47khz;
+}
+
+void Settings::setFreq47kHz(bool freq_47khz_)
+{
+	freq_47khz =  freq_47khz_;
 	changed = true;
 }
 
@@ -194,12 +208,13 @@ bool Settings::write(void)
 		return false;
 	}
 
-	char hstring[20], prevstring[20], stereostring[20];
+	char hstring[20], prevstring[20], stereostring[20], freqstring[20];
 	handednessToString(hstring);
 	boolToString(sample_preview, prevstring);
 	boolToString(stereo_output, stereostring);
-	fiprintf(conf, "Samplepath = %s\nSongpath = %s\nHandedness = %s\nSample Preview = %s\nStereo Output = %s\n",
-			samplepath, songpath, hstring, prevstring, stereostring);
+	boolToString(freq_47khz, freqstring);
+	fiprintf(conf, "Samplepath = %s\nSongpath = %s\nHandedness = %s\nSample Preview = %s\nStereo Output = %s\n47kHz Output = %s\n",
+			samplepath, songpath, hstring, prevstring, stereostring, freqstring);
 	fclose(conf);
 	return true;
 }
