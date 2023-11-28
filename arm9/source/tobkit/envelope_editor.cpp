@@ -37,7 +37,7 @@
 EnvelopeEditor::EnvelopeEditor(u8 _x, u8 _y, u8 _width, u8 _height, u16 **_vram, u16 _max_x, u16 _max_y, u16 _max_points)
 	:Widget(_x, _y, _width, _height, _vram), onPointsChange(0), onDrawFinish(0),
 	pen_is_down(false), pen_on_point(false), points_max_x(_max_x), points_max_y(_max_y), n_points(0),
-	max_points(_max_points), active_point(0), zoom_level(0), buttonstate(0), scrollthingypos(0),
+	max_points(_max_points), active_point(0), sustain(false), sustain_point_index(0), zoom_level(0), buttonstate(0), scrollthingypos(0),
 	scrollthingyheight(width-2*SCROLLBUTTON_HEIGHT+2), pen_x_on_scrollthingy(0), scrollpos(0), draw_mode(false)
 {
 	points_x = (u16*)calloc(1, _max_points * sizeof(u16));
@@ -303,6 +303,11 @@ u16 EnvelopeEditor::getPoints(u16 **xs, u16 **ys) // Returns the number of point
 	return n_points;
 }
 
+u16 EnvelopeEditor::getActivePoint(void)
+{
+  return active_point;
+}
+
 void EnvelopeEditor::addPoint(void)
 {
 	if(n_points == max_points)
@@ -363,6 +368,17 @@ void EnvelopeEditor::delPoint(void)
 
 		draw();
 	}
+}
+
+void EnvelopeEditor::toggleSustain(bool is_enabled)
+{
+  sustain = is_enabled;  
+}
+
+void EnvelopeEditor::setEditorSustainParams(bool sus, u8 sus_point)
+{
+  sustain = sus;
+  sustain_point_index = sus_point;
 }
 
 void EnvelopeEditor::clear(void)
@@ -497,6 +513,13 @@ void EnvelopeEditor::draw(void)
 
 
 			// Draw the line
+			if (sustain == true)
+			{
+			  if (idx == (sustain_point_index + 1))
+			  {
+			    drawBresLine(last_point_x, last_point_y, last_point_x, MAX_Y, RGB15(0,31,0) | BIT(15));
+			  }
+			}
 			drawBresLine(line_x1, line_y1, line_x2, line_y2, theme->col_dark_ctrl);
 
 			// Display unclipped points

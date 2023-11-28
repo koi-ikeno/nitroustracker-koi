@@ -22,9 +22,9 @@ limitations under the License.
 
 /* ===================== PUBLIC ===================== */
 
-NumberSlider::NumberSlider(u8 _x, u8 _y, u8 _width, u8 _height, uint16 **_vram, s32 _value, s32 _min, s32 _max, bool _hex)
+NumberSlider::NumberSlider(u8 _x, u8 _y, u8 _width, u8 _height, uint16 **_vram, s32 _value, s32 _min, s32 _max, bool _hex, bool _is_8bit)
 	:Widget(_x, _y, _width, _height, _vram),
-	value(_value), btnstate(0), min(_min), max(_max), hex(_hex)
+	value(_value), btnstate(0), min(_min), max(_max), hex(_hex), is_8bit(_is_8bit)
 {
 	onChange = 0;
 	onPostChange = 0;
@@ -178,7 +178,12 @@ void NumberSlider::draw(void)
 	// Number display
 	drawFullBox(9,1,width-10,height-2,theme->col_lighter_bg);
 	char numberstr[5];
-	sniprintf(numberstr, sizeof(numberstr), hex ? "%2lx" : "%3ld", value);
+	if (is_8bit)
+	{
+		sniprintf(numberstr, sizeof(numberstr), hex ? "%2hhx" : "%3hhd", (int)value);
+	} else {
+		sniprintf(numberstr, sizeof(numberstr), hex ? "%2lx" : "%3ld", value);
+	}
 	drawString(numberstr, 10, 5);
 	
 	// Border

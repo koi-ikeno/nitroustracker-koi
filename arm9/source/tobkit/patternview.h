@@ -119,6 +119,7 @@ class PatternView: public Widget {
 		
 		bool isMuted(u16 channel);
 		void unmute(u16 channel);
+		void toggleEffectsVisibility(bool on);
 		
 	private:
 		void draw(void);
@@ -191,7 +192,8 @@ class PatternView: public Widget {
 			u16 notecol = dark?col_notes_dark:col_notes;
 			u16 instrcol = dark?col_instr_dark:col_instr;
 			u16 volumecol = dark?col_volume_dark:col_volume;
-			
+			u16 effectcol = dark?col_effect_dark:col_effect;
+			u16 effectparamcol = dark?col_effect_param_dark:col_effect_param;
 			/*
 			typedef struct {
 				u8 note;
@@ -233,17 +235,28 @@ class PatternView: public Widget {
 			if(cell->volume != NO_VOLUME)
 				drawHexByte(cell->volume, realx+5*PV_CHAR_WIDTH+2, realy, volumecol);
 			
-			
-			// Effect is left out for now. Maybe I'll implement it.
-			//drawHexByte(cell->effect, realx+5*PV_CHAR_WIDTH+2, realy, volumecol);
-			
-		}
+			if (effects_visible)
+			{
+        // Effect and effect parameter
+        if (cell->effect != 0xff)
+          drawHexByte(cell->effect, realx+7*PV_CHAR_WIDTH+2, realy, effectcol);
+
+        if (cell->effect_param != 0x00)
+          drawHexByte(cell->effect_param, realx+9*PV_CHAR_WIDTH+2, realy, effectparamcol);
+      }
+    }
 		
 		void updateFromState(void);
 	
 		inline u8 getCellWidth(void)
 		{
-			return 31;//56;
+		  if (effects_visible)
+		  {
+		    cell_width = 50;
+		  } else {
+		    cell_width = 31;
+		  }
+			return cell_width;
 		}
 
 		inline u8 getEffectiveWidth(void)
@@ -283,12 +296,15 @@ class PatternView: public Widget {
 		State *state;
 
 		u16 col_lines, col_sublines, col_lines_record, cb_col1, cb_col2, cb_col1_highlight,
-			cb_col2_highlight, col_left_numbers, col_notes, col_instr, col_volume, 
-			col_notes_dark, col_instr_dark, col_volume_dark, col_bg, cb_sel_highlight;
+			cb_col2_highlight, col_left_numbers, col_notes, col_instr, col_volume, col_effect, col_effect_param,
+			col_notes_dark, col_instr_dark, col_volume_dark, col_effect_dark, col_effect_param_dark, col_bg, cb_sel_highlight;
 		
 		u16 hscrollpos;
 		
 		bool selection_exists, pen_down;
+		bool effects_visible;
+		
+		u8 cell_width;
 		u8 px, py;
 		u16 sel_start_x, sel_end_x, sel_start_y, sel_end_y;
 		u16 sel_x, sel_y, sel_w, sel_h;

@@ -75,9 +75,12 @@ class EnvelopeEditor: public Widget
 
 		void setPoints(u16 *xs, u16 *ys, u16 n); // Sets the points to the given values
 		u16 getPoints(u16 **xs, u16 **ys); // Returns the number of points and arrays to their x and y coords
-
+    u16 getActivePoint(void);
+    
 		void addPoint(void);
 		void delPoint(void);
+		void toggleSustain(bool is_enabled);
+		void setEditorSustainParams(bool sus, u8 suspoint);
 		void clear(void);
 
 		void zoomIn(void);
@@ -113,6 +116,9 @@ class EnvelopeEditor: public Widget
 		u16 n_points;
 		u16 max_points;
 		u16 active_point;
+		bool sustain;
+		u8 sustain_point_index;
+		
 
 		u8 zoom_level;
 		u8 buttonstate;

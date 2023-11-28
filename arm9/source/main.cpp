@@ -201,9 +201,9 @@ GUI *gui;
 
 // <Instrument Gui>
 	EnvelopeEditor *volenvedit;
-	Button *btnaddenvpoint, *btndelenvpoint, *btnenvzoomin, *btnenvzoomout, *btnenvdrawmode;
+	Button *btnaddenvpoint, *btndelenvpoint, *btnenvzoomin, *btnenvzoomout, *btnenvdrawmode, *btnenvsetsuspoint;
 	ToggleButton *tbmapsamples;
-	CheckBox *cbvolenvenabled;
+	CheckBox *cbvolenvenabled, *cbsusenabled;
 // </Instrument Gui>
 
 // <Settings Gui>
@@ -221,11 +221,12 @@ GUI *gui;
 // <Main Screen>
 	Button *buttonins, *buttondel, *buttonstopnote2, *buttoncolselect, *buttonemptynote2, *buttonunmuteall;
 	BitButton *buttonswitchmain;
-	Button *buttoncut, *buttoncopy, *buttonpaste, *buttonsetnotevol;
+	Button *buttoncut, *buttoncopy, *buttonpaste, *buttonsetnotevol, *buttonseteffectcmd, *buttonseteffectpar;
 	BitButton *buttonundo, *buttonredo;
 	PatternView *pv;
-	NumberSlider *nsnotevolume;
-	Label *labelmute, *labelnotevol;
+	NumberSlider *nsnotevolume, *nseffectcmd, *nseffectpar;
+	Label *labelmute, *labelnotevol, *labeleffectcmd, *labeleffectpar;
+	CheckBox *cbtoggleeffects;
 // </Main Screen>
 
 // <Things that suddenly pop up>
@@ -567,8 +568,11 @@ void volEnvSetInst(Instrument *inst)
 	{
 		u16 *xs, *ys;
 		u16 n = inst->getVolumeEnvelope(&xs, &ys);
+		bool s = inst->getVolumeEnvelopeSustainFlag();
+		u8 susp = inst->getVolumeEnvelopeSustainPoint();
 		volenvedit->setZoomAndPos(2, 0);
 		volenvedit->setPoints(xs, ys, n);
+		volenvedit->setEditorSustainParams(s, susp);
 	}
 	btnenvdrawmode->set_enabled(inst != NULL);
 	btnaddenvpoint->set_enabled(inst != NULL);
@@ -681,7 +685,10 @@ void setSong(Song *newsong)
 
 	inst = song->getInstrument(0);
 	if(inst != 0)
+	{
 		cbvolenvenabled->setChecked(inst->getVolEnvEnabled());
+		cbsusenabled->setChecked(inst->getVolumeEnvelopeSustainFlag());
+	}
 
 	updateLabelChannels();
 	updateLabelSongLen();
@@ -1761,8 +1768,45 @@ void setNoteVol(u16 vol)
 			for (u16 row = sel_y1; row <= sel_y2; row++)
 			{
 				Cell cell = song->getPattern(song->getPotEntry(state->potpos))[chn][row];
-				if( (cell.note != EMPTY_NOTE) && (cell.note != STOP_NOTE) )
-					cell.volume = vol;
+				cell.volume = vol;
+				*fill->ptr(chn - sel_x1, row - sel_y1) = cell;
+			}
+        action_buffer->add(song, new MultipleCellSetAction(state, sel_x1, sel_y1, fill, false));
+		redraw_main_requested = true;
+	}
+}
+
+void setEffectCommand(u16 eff)
+{
+	u16 sel_x1, sel_y1, sel_x2, sel_y2;
+	uiPotSelection(&sel_x1, &sel_y1, &sel_x2, &sel_y2, false);
+    CellArray *fill = new CellArray(sel_x2 - sel_x1 + 1, sel_y2 - sel_y1 + 1);
+    if (fill != NULL && fill->valid())
+    {
+		for (u16 chn = sel_x1; chn <= sel_x2; chn++)
+			for (u16 row = sel_y1; row <= sel_y2; row++)
+			{
+				Cell cell = song->getPattern(song->getPotEntry(state->potpos))[chn][row];
+				cell.effect = eff;
+				*fill->ptr(chn - sel_x1, row - sel_y1) = cell;
+			}
+        action_buffer->add(song, new MultipleCellSetAction(state, sel_x1, sel_y1, fill, false));
+		redraw_main_requested = true;
+	}
+}
+
+void setEffectParam(u16 eff_par)
+{
+	u16 sel_x1, sel_y1, sel_x2, sel_y2;
+	uiPotSelection(&sel_x1, &sel_y1, &sel_x2, &sel_y2, false);
+    CellArray *fill = new CellArray(sel_x2 - sel_x1 + 1, sel_y2 - sel_y1 + 1);
+    if (fill != NULL && fill->valid())
+    {
+		for (u16 chn = sel_x1; chn <= sel_x2; chn++)
+			for (u16 row = sel_y1; row <= sel_y2; row++)
+			{
+				Cell cell = song->getPattern(song->getPotEntry(state->potpos))[chn][row];
+				cell.effect_param = eff_par;
 				*fill->ptr(chn - sel_x1, row - sel_y1) = cell;
 			}
         action_buffer->add(song, new MultipleCellSetAction(state, sel_x1, sel_y1, fill, false));
@@ -1782,6 +1826,34 @@ void handleSetNoteVol(void)
 	setNoteVol(nsnotevolume->getValue());
 }
 
+void handleToggleEffectsVisibility(bool on)
+{
+  pv->toggleEffectsVisibility(on);
+}
+
+// number slider
+void handleEffectCommandChanged(s32 eff)
+{
+	setEffectCommand(eff);
+}
+
+// button
+void handleSetEffectCommand(void)
+{
+	setEffectCommand(nseffectcmd->getValue());
+}
+
+// number slider
+void handleEffectParamChanged(s32 eff_par)
+{
+	setEffectParam(eff_par);
+}
+
+// button
+void handleSetEffectParam(void)
+{
+	setEffectParam(nseffectpar->getValue());
+}
 void showTypewriter(const char *prompt, const char *str, void (*okCallback)(void), void (*cancelCallback)(void))
 {
     // TODO: Migrate to new TobKit to eliminate such ugliness
@@ -2621,6 +2693,36 @@ void envStartDrawMode(void)
 	volenvedit->startDrawMode();
 }
 
+void envSetSustainPoint(void)
+{
+  Instrument *inst = song->getInstrument(state->instrument);
+	if(inst == 0)
+		return;
+
+	u16 active_point = volenvedit->getActivePoint();
+
+	inst->setVolumeEnvelopeSustainPoint((u8)active_point);
+	
+	bool s = inst->getVolumeEnvelopeSustainFlag();
+	u8 susp = inst->getVolumeEnvelopeSustainPoint();
+	volenvedit->setEditorSustainParams(s, susp);
+	volenvedit->pleaseDraw();
+
+	DC_FlushAll();
+}
+
+void envToggleSustainEnabled(bool is_enabled)
+{
+  
+  Instrument *inst = song->getInstrument(state->instrument);
+	if(inst != NULL)
+	{
+		inst->toggleVolumeEnvelopeSustain(is_enabled);
+		volenvedit->toggleSustain(is_enabled);
+		volenvedit->pleaseDraw();
+	}
+}
+
 void sampleDrawToggle(bool on)
 {
 	sampledisplay->setDrawMode(on);
@@ -2997,7 +3099,15 @@ void setupGUI(bool dldi_enabled)
 		btnenvdrawmode = new Button(6, 112, 60, 10, &sub_vram);
 		btnenvdrawmode->setCaption("draw env");
 		btnenvdrawmode->registerPushCallback(envStartDrawMode);
-
+    
+    btnenvsetsuspoint = new Button(6, 122, 60, 10, &sub_vram);
+    btnenvsetsuspoint->setCaption("set sus");
+    btnenvsetsuspoint->registerPushCallback(envSetSustainPoint);
+    
+    cbsusenabled = new CheckBox(6, 132, 60, 10, &sub_vram, true, false);
+    cbsusenabled->setCaption("sus on");
+    cbsusenabled->registerToggleCallback(envToggleSustainEnabled);
+    
 		tbmapsamples = new ToggleButton(5, 125, 80, 12, &sub_vram, false);
 		tbmapsamples->setCaption("map samples");
 		tbmapsamples->registerToggleCallback(toggleMapSamples);
@@ -3007,6 +3117,8 @@ void setupGUI(bool dldi_enabled)
 		tabbox->registerWidget(btnenvzoomin, 0, 3);
 		tabbox->registerWidget(btnenvzoomout, 0, 3);
 		tabbox->registerWidget(btnenvdrawmode, 0, 3);
+		tabbox->registerWidget(btnenvsetsuspoint, 0, 3);
+		tabbox->registerWidget(cbsusenabled, 0, 3);
 		tabbox->registerWidget(cbvolenvenabled, 0, 3);
 		tabbox->registerWidget(volenvedit, 0, 3);
 		tabbox->registerWidget(tbmapsamples, 0, 3);
@@ -3154,12 +3266,36 @@ void setupGUI(bool dldi_enabled)
 		labelnotevol = new Label(230, 44, 23, 10, &main_vram_back, false, true);
 		labelnotevol->setCaption("vol");
 
-		nsnotevolume	 = new NumberSlider(225, 54, 30, 17, &main_vram_back, 127, 0, 127, true);
+		nsnotevolume	 = new NumberSlider(225, 54, 30, 17, &main_vram_back, 127, 0, 127, true, true);
 		nsnotevolume->registerPostChangeCallback(handleNoteVolumeChanged);
 
 		buttonsetnotevol = new Button(225, 70, 30, 12, &main_vram_back);
 		buttonsetnotevol->setCaption("set");
 		buttonsetnotevol->registerPushCallback(handleSetNoteVol);
+
+		cbtoggleeffects = new CheckBox(195, 32, 30, 12, &main_vram_back, true, true, true);
+		cbtoggleeffects->setCaption("FX");
+		cbtoggleeffects->registerToggleCallback(handleToggleEffectsVisibility);
+
+		labeleffectcmd = new Label(200, 44, 23, 10, &main_vram_back, false, true);
+		labeleffectcmd->setCaption("cmd");
+
+		nseffectcmd	= new NumberSlider(196, 54, 28, 17, &main_vram_back, 0, -1, 26, true, true);
+		nseffectcmd->registerPostChangeCallback(handleEffectCommandChanged);
+
+		buttonseteffectcmd = new Button(196, 70, 28, 12, &main_vram_back);
+		buttonseteffectcmd->setCaption("set");
+		buttonseteffectcmd->registerPushCallback(handleSetEffectCommand);
+
+		labeleffectpar = new Label(200, 84, 23, 10, &main_vram_back, false, true);
+		labeleffectpar->setCaption("val");
+
+		nseffectpar	= new NumberSlider(196, 94, 28, 17, &main_vram_back, 0, 0, 255, true, true);
+		nseffectpar->registerPostChangeCallback(handleEffectParamChanged);
+
+		buttonseteffectpar = new Button(196, 110, 28, 12, &main_vram_back);
+		buttonseteffectpar->setCaption("set");
+		buttonseteffectpar->registerPushCallback(handleSetEffectParam);
 
 		//buttoncut         = new BitButton(232,  52, 22, 21, &main_vram_back, icon_cut_raw, 16, 16, 3, 2);
 		//buttoncopy        = new BitButton(232,  74, 22, 21, &main_vram_back, icon_copy_raw, 16, 16, 3, 3);
@@ -3205,6 +3341,13 @@ void setupGUI(bool dldi_enabled)
 		gui->registerWidget(labelnotevol, 0, MAIN_SCREEN);
 		gui->registerWidget(nsnotevolume, 0, MAIN_SCREEN);
 		gui->registerWidget(buttonsetnotevol, 0, MAIN_SCREEN);
+		gui->registerWidget(cbtoggleeffects, 0, MAIN_SCREEN);
+		gui->registerWidget(labeleffectcmd, 0, MAIN_SCREEN);
+		gui->registerWidget(nseffectcmd, 0, MAIN_SCREEN);
+		gui->registerWidget(buttonseteffectcmd, 0, MAIN_SCREEN);
+		gui->registerWidget(labeleffectpar, 0, MAIN_SCREEN);
+		gui->registerWidget(nseffectpar, 0, MAIN_SCREEN);
+		gui->registerWidget(buttonseteffectpar, 0, MAIN_SCREEN);
 		gui->registerWidget(buttoncut, 0, MAIN_SCREEN);
 		gui->registerWidget(buttoncopy, 0, MAIN_SCREEN);
 		gui->registerWidget(buttonpaste, 0, MAIN_SCREEN);
