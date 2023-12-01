@@ -2183,7 +2183,6 @@ void handleOutputModeChange(u8 outputMode)
 void handleOutputFreqChange(u8 freq)
 {
 	settings->setFreq47kHz(freq != 0);
-	stopPlay();
 	soundExtSetFrequency(freq ? 47 : 32);
 }
 
