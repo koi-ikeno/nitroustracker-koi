@@ -95,7 +95,7 @@ ifeq ($(WIFI),true)
 DEFINES		+= -DWIFI
 endif
 
-ARCH		:= -mcpu=arm7tdmi -mtune=arm7tdmi
+ARCH		:= -mcpu=arm7tdmi
 
 WARNFLAGS	:= -Wall
 

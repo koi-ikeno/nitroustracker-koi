@@ -93,7 +93,7 @@ ifeq ($(DEBUG),true)
 DEFINES		+= -DDEBUG
 endif
 
-ARCH		:= -march=armv5te -mtune=arm946e-s
+ARCH		:= -mcpu=arm946e-s+nofp
 
 WARNFLAGS	:= -Wall
 
