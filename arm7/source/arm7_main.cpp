@@ -68,6 +68,15 @@ void powerButtonHandler(void) {
 }
 
 //---------------------------------------------------------------------------------
+void enableSound() {
+//---------------------------------------------------------------------------------
+    powerOn(POWER_SOUND);
+    writePowerManagement(PM_CONTROL_REG, ( readPowerManagement(PM_CONTROL_REG) & ~PM_SOUND_MUTE ) | PM_SOUND_AMP );
+    REG_SOUNDCNT = SOUND_ENABLE;
+    REG_MASTER_VOLUME = 127;
+}
+
+//---------------------------------------------------------------------------------
 int main(int argc, char ** argv) {
 //---------------------------------------------------------------------------------
 	enableSound();

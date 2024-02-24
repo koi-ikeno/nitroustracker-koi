@@ -158,7 +158,7 @@ void Piano::draw(void)
 	{
 		for(px=0; px<PIANO_WIDTH_TILES; ++px)
 		{
-			map_base[32*(py+y/8)+(px+x/8)] = piano_Map[29*py+px+1];
+			map_base[32*(py+y/8)+(px+x/8)] = piano_Map[(29)*py+px+1];
 		}
 	}
 }

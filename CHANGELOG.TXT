@@ -34,7 +34,7 @@ Fixes:
 
 New features:
 
-- nowifi build: ~100K more free RAM, but no dsmidiwifi support
+- no build: ~100K more free RAM, but no dsmidiwifi support
 - scroll lock: loop pattern + detach cursor from song playback
   - the old "loop ptn" option has been moved to the pattern/song tab
 

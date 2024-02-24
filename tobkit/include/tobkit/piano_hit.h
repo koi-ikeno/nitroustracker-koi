@@ -14,4 +14,4 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ======================================================================*/
 
-extern const u8 piano_hit[][28];
+extern const u8 piano_hit[][28];//PIANO_WIDTH_TILES

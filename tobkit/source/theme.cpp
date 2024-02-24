@@ -16,14 +16,15 @@ limitations under the License.
 
 #include "tobkit/theme.h"
 
+// colors for patternview are coded in patternview.cpp
 Theme::Theme(void)
 {
 	// Set default colors
-	col_bg                  = RGB15(4,6,15)|BIT(15);
+	col_bg                  = RGB15(3,5,14)|BIT(15);//4,6,15 keybord screen
 	col_dark_bg             = col_bg;
-	col_medium_bg           = RGB15(9,11,17)|BIT(15);
-	col_light_bg            = RGB15(16,18,24)|BIT(15);
-	col_lighter_bg          = RGB15(23,25,31) | BIT(15);
+	col_medium_bg           = RGB15(9,11,17)|BIT(15);//gradation for keybord screen
+	col_light_bg            = RGB15(16,18,24)|BIT(15);//window bg for keybord screen
+	col_lighter_bg          = RGB15(23,25,31) | BIT(15);// font color1 and bg of numberpicker
 	col_light_ctrl          = RGB15(31,31,0)|BIT(15); // RGB15(26,26,26)|BIT(15)
 	col_dark_ctrl           = RGB15(31,18,0)|BIT(15); // RGB15(31,31,31)|BIT(15)
 	col_light_ctrl_disabled = col_light_bg;

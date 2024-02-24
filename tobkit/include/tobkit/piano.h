@@ -21,7 +21,13 @@ limitations under the License.
 #include "widget.h"
 
 #define PIANO_WIDTH_TILES 28
+//28 描画する幅 拡大倍率ではなく、なにかしら絶対量に対し適用されている
+//　画像をバイナリマップにして転写している
+// マップの表現形式を理解する必要がある
+// https://devkitpro.org/viewtopic.php?t=1365
+// TILEは描画単位 
 #define PIANO_HEIGHT_TILES 5
+//5 描画する高さ　単位は不明
 
 class Piano: public Widget {
 	public:
