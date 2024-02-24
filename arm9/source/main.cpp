@@ -2980,7 +2980,7 @@ void setupGUI(bool dldi_enabled)
 		buttonsmpselnone = new BitButton(40-8, 110+17, 17+4, 17, &sub_vram, sampleedit_none_raw);
 		buttonsmpselnone->registerPushCallback(sample_clear_selection);
 
-		labelsampleedit_edit = new Label(76, 97, 62, 30, &sub_vram, false);
+		labelsampleedit_edit = new Label(76, 97, 30, 30, &sub_vram, false);
 		labelsampleedit_edit->setCaption("edit");
 
 		buttonsmpfadein = new BitButton(78-8-4, 107, 17+4, 17, &sub_vram, sampleedit_fadein_raw);
@@ -3013,15 +3013,17 @@ void setupGUI(bool dldi_enabled)
 
 	// <Drawing and Generating>
 
-		buttonsmpdraw = new ToggleButton(18+20+4+5, 110, 21, 21, &sub_vram);
+		labelsampleedit_record = new Label(33, 99, 25, 30, &sub_vram, false);
+		labelsampleedit_record->setCaption("rec");
+
+		buttonrecord = new BitButton(35, 110, 21, 21, &sub_vram, sampleedit_record_raw);
+		buttonrecord->registerPushCallback(handleRecordSample);
+		
+		buttonsmpdraw = new ToggleButton(18+20+4+25, 110, 21, 21, &sub_vram);
 		buttonsmpdraw->setBitmap(sampleedit_draw_raw);
 		buttonsmpdraw->registerToggleCallback(sampleDrawToggle);
 
-		labelsampleedit_record = new Label(18+3, 99, 25, 30, &sub_vram, true);
-		labelsampleedit_record->setCaption("rec");
-
-		buttonrecord = new BitButton(25, 110, 21, 21, &sub_vram, sampleedit_record_raw);
-		buttonrecord->registerPushCallback(handleRecordSample);
+		
 		sampletabbox->registerWidget(buttonrecord, 0, 1);
 		sampletabbox->registerWidget(buttonsmpdraw, 0, 1);
 	
@@ -3065,7 +3067,7 @@ void setupGUI(bool dldi_enabled)
 	// </Sample settings>
 
 	// <Looping>
-		gbsampleloop = new GroupBox(19, 99, 110, 32+10, &sub_vram);
+		gbsampleloop = new GroupBox(19, 99, 70, 32+10, &sub_vram);
 		gbsampleloop->setText("loop type");
 
 		rbg_sampleloop = new RadioButton::RadioButtonGroup();
@@ -3082,7 +3084,7 @@ void setupGUI(bool dldi_enabled)
 
 		rbg_sampleloop->registerChangeCallback(handleSampleLoopChanged);
 
-		cbsnapto0xing = new CheckBox(80, 110, 50, 15, &sub_vram, true, true);
+		cbsnapto0xing = new CheckBox(90, 110, 49, 15, &sub_vram, true, true);
 		cbsnapto0xing->setCaption("snap");
 		cbsnapto0xing->registerToggleCallback(handleSnapTo0XingToggled);
 
