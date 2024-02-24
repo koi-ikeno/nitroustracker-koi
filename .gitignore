@@ -1,4 +1,7 @@
 *.nds
+*.d
+*.o
 build
+build-debug
 tobkit/build
 tobkit/lib
